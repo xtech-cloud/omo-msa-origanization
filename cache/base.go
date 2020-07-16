@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"github.com/micro/go-micro/v2/logger"
 	"omo.msa.organization/config"
 	"omo.msa.organization/proxy/nosql"
 	"time"
@@ -10,6 +11,8 @@ type BaseInfo struct {
 	ID         uint64 `json:"-"`
 	UID        string `json:"uid"`
 	Name       string `json:"name"`
+	Creator string
+	Operator string
 	CreateTime time.Time
 	UpdateTime time.Time
 }
@@ -28,6 +31,16 @@ func InitData() error {
 	if nil != err {
 		return err
 	}
+
+	scenes,err := nosql.GetAllScenes()
+	if err == nil {
+		for _, scene := range scenes {
+			tmp := new(SceneInfo)
+			tmp.initInfo(scene)
+			cacheCtx.scenes = append(cacheCtx.scenes, tmp)
+		}
+	}
+	logger.Infof("init scenes that number = %d", len(cacheCtx.scenes))
 
 	return nil
 }

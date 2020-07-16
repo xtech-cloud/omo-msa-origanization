@@ -23,7 +23,7 @@ run:
 
 .PHONY: call
 call:
-	MICRO_REGISTRY=consul micro call omo.msa.organization Echo.Call '{"name":"John"}'
+	MICRO_REGISTRY=consul micro call omo.msa.organization SceneService.SubtractMember '{"uid":"5f0fc13e39d054111e1ab134", "member":"2"}'
 
 .PHONY: tester
 tester:

@@ -1,6 +1,7 @@
 package nosql
 
 import (
+	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,15 +14,17 @@ type Scene struct {
 	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
+	Creator     string             `json:"creator" bson:"creator"`
+	Operator    string             `json:"operator" bson:"operator"`
 
-	Name   string                `json:"name" bson:"name"`
-	Type   uint8 `json:"type" bson:"type"`
-	Status uint8 `json:"status" bson:"status"`
-	Cover string `json:"cover" bson:"cover"`
-	Master string `json:"master" bson:"master"`
-	Remark string `json:"remark" bson:"remark"`
-	Location string `json:"location" bson:"location"`
-	Members []string                `json:"members" bson:"members"`
+	Name     string   `json:"name" bson:"name"`
+	Type     uint8    `json:"type" bson:"type"`
+	Status   uint8    `json:"status" bson:"status"`
+	Cover    string   `json:"cover" bson:"cover"`
+	Master   string   `json:"master" bson:"master"`
+	Remark   string   `json:"remark" bson:"remark"`
+	Location string   `json:"location" bson:"location"`
+	Members  []string `json:"members" bson:"members"`
 }
 
 func CreateScene(info *Scene) error {
@@ -50,45 +53,56 @@ func GetScene(uid string) (*Scene, error) {
 	return model, nil
 }
 
-func GetAllScenes(uid string) (*Scene, error) {
-	result, err := findAll(TableScene, 0)
-	if err != nil {
-		return nil, err
-	}
-	model := new(Scene)
-	err1 := result.Decode(model)
+func GetAllScenes() ([]*Scene, error) {
+	var items = make([]*Scene, 0, 100)
+	cursor, err1 := findAll(TableScene, 0)
 	if err1 != nil {
 		return nil, err1
 	}
-	return model, nil
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		var node = new(Scene)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
 }
 
-func UpdateSceneBase(uid, name, remark string) error {
-	msg := bson.M{"name": name, "remark": remark, "updatedAt": time.Now()}
+func UpdateSceneBase(uid, name, remark, operator string) error {
+	msg := bson.M{"name": name, "remark": remark, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }
 
-func UpdateSceneCover(uid string, icon string) error {
-	msg := bson.M{"cover": icon, "updatedAt": time.Now()}
+func UpdateSceneMaster(uid, master, operator string) error {
+	msg := bson.M{"master": master, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }
 
-func UpdateSceneLocal(uid string, local string) error {
-	msg := bson.M{"location": local, "updatedAt": time.Now()}
+func UpdateSceneCover(uid string, icon, operator string) error {
+	msg := bson.M{"cover": icon, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }
 
-func UpdateSceneStatus(uid string, status uint8) error {
-	msg := bson.M{"status": status, "updatedAt": time.Now()}
+func UpdateSceneLocal(uid string, local, operator string) error {
+	msg := bson.M{"location": local, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }
 
-func RemoveScene(uid string) error {
-	_, err := removeOne(TableScene, uid)
+func UpdateSceneStatus(uid string, status uint8, operator string) error {
+	msg := bson.M{"status": status, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
+func RemoveScene(uid, operator string) error {
+	_, err := removeOne(TableScene, uid, operator)
 	return err
 }
 
@@ -101,7 +115,7 @@ func AppendSceneMember(uid string, member string) error {
 	return err
 }
 
-func SubtractSceneMember(uid , member string) error {
+func SubtractSceneMember(uid, member string) error {
 	if len(uid) < 1 {
 		return errors.New("the uid is empty")
 	}

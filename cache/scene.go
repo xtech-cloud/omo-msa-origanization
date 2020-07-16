@@ -40,6 +40,8 @@ func CreateScene(info *SceneInfo) error {
 	db.ID = nosql.GetSceneNextID()
 	db.CreatedTime = time.Now()
 	db.UpdatedTime = time.Now()
+	db.Operator = info.Operator
+	db.Creator = info.Creator
 	db.Name = info.Name
 	db.Cover = info.Cover
 	db.Remark = info.Remark
@@ -70,15 +72,28 @@ func GetScene(uid string) *SceneInfo {
 	return nil
 }
 
+func GetScenes(number, page int32) []*SceneInfo {
+	list := make([]*SceneInfo, 0, number)
+	length := int32(len(cacheCtx.scenes))
+	for i := 0;i < len(cacheCtx.scenes);i += 1{
+		t := length / number + 1
+		if t == page {
+			list = append(list, cacheCtx.scenes[i])
+		}
+	}
+
+	return list
+}
+
 func GetAllScenes() []*SceneInfo {
 	return cacheCtx.scenes
 }
 
-func RemoveScene(uid string) error {
+func RemoveScene(uid, operator string) error {
 	if len(uid) < 1 {
 		return errors.New("the scene uid is empty")
 	}
-	err := nosql.RemoveScene(uid)
+	err := nosql.RemoveScene(uid, operator)
 	if err == nil {
 		for i := 0;i < len(cacheCtx.scenes);i += 1 {
 			if cacheCtx.scenes[i].UID == uid {
@@ -95,6 +110,8 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.ID = db.ID
 	mine.UpdateTime = db.UpdatedTime
 	mine.CreateTime = db.CreatedTime
+	mine.Creator = db.Creator
+	mine.Operator = db.Operator
 	mine.Name = db.Name
 	mine.Cover = db.Cover
 	mine.Remark = db.Remark
@@ -104,35 +121,54 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.members = db.Members
 }
 
-func (mine *SceneInfo)UpdateBase(name, remark string) error {
-	err := nosql.UpdateSceneBase(mine.UID, name, remark)
+func (mine *SceneInfo)UpdateBase(name, remark, operator string) error {
+	if len(name) < 1 {
+		name = mine.Name
+	}
+	if len(remark) < 1 {
+		remark = mine.Remark
+	}
+	err := nosql.UpdateSceneBase(mine.UID, name, remark, operator)
 	if err == nil {
 		mine.Name = name
 		mine.Remark = remark
+		mine.Operator = operator
 	}
 	return err
 }
 
-func (mine *SceneInfo)UpdateCover(cover string) error {
-	err := nosql.UpdateSceneCover(mine.UID, cover)
+func (mine *SceneInfo)UpdateMaster(master, operator string) error {
+	err := nosql.UpdateSceneMaster(mine.UID, master, operator)
+	if err == nil {
+		mine.Master = master
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *SceneInfo)UpdateCover(cover, operator string) error {
+	err := nosql.UpdateSceneCover(mine.UID, cover, operator)
 	if err == nil {
 		mine.Cover = cover
+		mine.Operator = operator
 	}
 	return err
 }
 
-func (mine *SceneInfo)UpdateLocation(local string) error {
-	err := nosql.UpdateSceneLocal(mine.UID, local)
+func (mine *SceneInfo)UpdateLocation(local, operator string) error {
+	err := nosql.UpdateSceneLocal(mine.UID, local, operator)
 	if err == nil {
 		mine.Location = local
+		mine.Operator = operator
 	}
 	return err
 }
 
-func (mine *SceneInfo)UpdateStatus(st SceneStatus) error {
-	err := nosql.UpdateSceneStatus(mine.UID, uint8(st))
+func (mine *SceneInfo)UpdateStatus(st SceneStatus, operator string) error {
+	err := nosql.UpdateSceneStatus(mine.UID, uint8(st), operator)
 	if err == nil {
 		mine.Status = st
+		mine.Operator = operator
 	}
 	return err
 }
