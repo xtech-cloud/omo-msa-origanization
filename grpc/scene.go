@@ -77,12 +77,14 @@ func (mine *SceneService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out 
 }
 
 func (mine *SceneService)GetList(ctx context.Context, in *pb.ReqScenePage, out *pb.ReplySceneList) error {
-	list := cache.GetScenes(in.Number, in.Page)
+	total,max,list := cache.GetScenes(in.Number, in.Page)
 	out.List = make([]*pb.SceneInfo, 0, len(list))
 	for _, value := range list {
 		out.List = append(out.List, switchScene(value))
 	}
-	out.Page = in.Page
+	out.PageNow = in.Page
+	out.Total = total
+	out.PageMax = max
 	return nil
 }
 

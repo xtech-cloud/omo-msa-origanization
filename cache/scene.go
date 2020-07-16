@@ -72,17 +72,18 @@ func GetScene(uid string) *SceneInfo {
 	return nil
 }
 
-func GetScenes(number, page int32) []*SceneInfo {
+func GetScenes(number, page int32) (int32,int32,[]*SceneInfo) {
 	list := make([]*SceneInfo, 0, number)
 	length := int32(len(cacheCtx.scenes))
+	max := length / number + 1
 	for i := 0;i < len(cacheCtx.scenes);i += 1{
-		t := length / number + 1
+		t := int32(i) / number + 1
 		if t == page {
 			list = append(list, cacheCtx.scenes[i])
 		}
 	}
 
-	return list
+	return length, max, list
 }
 
 func GetAllScenes() []*SceneInfo {
