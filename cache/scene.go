@@ -72,12 +72,18 @@ func GetScene(uid string) *SceneInfo {
 	return nil
 }
 
-func GetScenes(number, page int32) (int32,int32,[]*SceneInfo) {
-	list := make([]*SceneInfo, 0, number)
-	length := int32(len(cacheCtx.scenes))
+func GetScenes(number, page uint32) (uint32,uint32,[]*SceneInfo) {
+	if number < 1 {
+		number = 10
+	}
+	length := uint32(len(cacheCtx.scenes))
 	max := length / number + 1
+	if page < 1 {
+		return length,max, cacheCtx.scenes
+	}
+	list := make([]*SceneInfo, 0, number)
 	for i := 0;i < len(cacheCtx.scenes);i += 1{
-		t := int32(i) / number + 1
+		t := uint32(i) / number + 1
 		if t == page {
 			list = append(list, cacheCtx.scenes[i])
 		}
@@ -88,6 +94,15 @@ func GetScenes(number, page int32) (int32,int32,[]*SceneInfo) {
 
 func GetAllScenes() []*SceneInfo {
 	return cacheCtx.scenes
+}
+
+func IsMasterUsed(uid string) bool {
+	for i := 0;i < len(cacheCtx.scenes);i += 1{
+		if cacheCtx.scenes[i].UID == uid {
+			return true
+		}
+	}
+	return false
 }
 
 func RemoveScene(uid, operator string) error {
@@ -116,6 +131,7 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.Name = db.Name
 	mine.Cover = db.Cover
 	mine.Remark = db.Remark
+	mine.Master = db.Master
 	mine.Location = db.Location
 	mine.Type = SceneType(db.Type)
 	mine.Status = SceneStatus(db.Status)
@@ -139,6 +155,9 @@ func (mine *SceneInfo)UpdateBase(name, remark, operator string) error {
 }
 
 func (mine *SceneInfo)UpdateMaster(master, operator string) error {
+	if IsMasterUsed(master) {
+		return errors.New("the master had used by other scene")
+	}
 	err := nosql.UpdateSceneMaster(mine.UID, master, operator)
 	if err == nil {
 		mine.Master = master

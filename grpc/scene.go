@@ -2,7 +2,9 @@ package grpc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"github.com/micro/go-micro/v2/logger"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"omo.msa.organization/cache"
 )
@@ -27,7 +29,23 @@ func switchScene(info *cache.SceneInfo) *pb.SceneInfo {
 	return tmp
 }
 
+func inLog(name, data interface{})  {
+	bytes, _ := json.Marshal(data)
+	msg := ByteString(bytes)
+	logger.Infof("[in.%s]:data = %s", name, msg)
+}
+
+func ByteString(p []byte) string {
+	for i := 0; i < len(p); i++ {
+		if p[i] == 0 {
+			return string(p[0:i])
+		}
+	}
+	return string(p)
+}
+
 func (mine *SceneService)AddOne(ctx context.Context, in *pb.ReqSceneAdd, out *pb.ReplySceneOne) error {
+	inLog("scene.add", in)
 	if len(in.Name) < 1 {
 		out.Status = pb.ResultStatus_Empty
 		return errors.New("the scene name is empty")
@@ -50,6 +68,7 @@ func (mine *SceneService)AddOne(ctx context.Context, in *pb.ReqSceneAdd, out *pb
 }
 
 func (mine *SceneService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplySceneOne) error {
+	inLog("scene.get", in)
 	if len(in.Uid) < 1 {
 		out.Status = pb.ResultStatus_Empty
 		return errors.New("the scene uid is empty")
@@ -64,6 +83,7 @@ func (mine *SceneService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 }
 
 func (mine *SceneService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
+	inLog("scene.remove", in)
 	if len(in.Uid) < 1 {
 		out.Status = pb.ResultStatus_Empty
 		return errors.New("the scene uid is empty")
@@ -74,6 +94,16 @@ func (mine *SceneService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out 
 	}
 	out.Uid = in.Uid
 	return err
+}
+
+func (mine *SceneService)IsMasterUsed(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyMasterUsed) error {
+	inLog("scene.master.used", in)
+	if len(in.Uid) < 1 {
+		return errors.New("the scene uid is empty")
+	}
+	out.Master = in.Uid
+	out.Used = cache.IsMasterUsed(in.Uid)
+	return nil
 }
 
 func (mine *SceneService)GetList(ctx context.Context, in *pb.ReqScenePage, out *pb.ReplySceneList) error {
@@ -89,6 +119,7 @@ func (mine *SceneService)GetList(ctx context.Context, in *pb.ReqScenePage, out *
 }
 
 func (mine *SceneService) UpdateBase (ctx context.Context, in *pb.ReqSceneUpdate, out *pb.ReplySceneOne) error {
+	inLog("scene.update", in)
 	if len(in.Uid) < 1 {
 		out.Status = pb.ResultStatus_Empty
 		return errors.New("the scene uid is empty")
