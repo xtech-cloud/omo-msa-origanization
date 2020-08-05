@@ -72,6 +72,22 @@ func GetScene(uid string) *SceneInfo {
 	return nil
 }
 
+func GetSceneByMember(uid string) *SceneInfo {
+	for i := 0;i < len(cacheCtx.scenes);i += 1{
+		if cacheCtx.scenes[i].HadMember(uid) {
+			return cacheCtx.scenes[i]
+		}
+	}
+	db,err := nosql.GetSceneByMaster(uid)
+	if err == nil {
+		info := new(SceneInfo)
+		info.initInfo(db)
+		cacheCtx.scenes = append(cacheCtx.scenes, info)
+		return info
+	}
+	return nil
+}
+
 func GetScenes(number, page uint32) (uint32,uint32,[]*SceneInfo) {
 	if number < 1 {
 		number = 10
@@ -194,6 +210,9 @@ func (mine *SceneInfo)UpdateStatus(st SceneStatus, operator string) error {
 }
 
 func (mine *SceneInfo)HadMember(member string) bool {
+	if mine.Master == member {
+		return true
+	}
 	for i := 0;i < len(mine.members);i += 1 {
 		if mine.members[i] == member {
 			return true

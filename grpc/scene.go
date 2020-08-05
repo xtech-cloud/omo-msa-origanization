@@ -82,6 +82,21 @@ func (mine *SceneService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 	return nil
 }
 
+func (mine *SceneService)GetOneByMaster(ctx context.Context, in *pb.RequestInfo, out *pb.ReplySceneOne) error {
+	inLog("scene.getByMember", in)
+	if len(in.Uid) < 1 {
+		out.Status = pb.ResultStatus_Empty
+		return errors.New("the scene uid is empty")
+	}
+	info := cache.GetSceneByMember(in.Uid)
+	if info == nil {
+		out.Status = pb.ResultStatus_NotExisted
+		return errors.New("the scene not found")
+	}
+	out.Info = switchScene(info)
+	return nil
+}
+
 func (mine *SceneService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
 	inLog("scene.remove", in)
 	if len(in.Uid) < 1 {

@@ -53,6 +53,20 @@ func GetScene(uid string) (*Scene, error) {
 	return model, nil
 }
 
+func GetSceneByMaster(user string) (*Scene, error) {
+	msg := bson.M{"master":user}
+	result, err := findOneBy(TableScene, msg)
+	if err != nil {
+		return nil, err
+	}
+	model := new(Scene)
+	err1 := result.Decode(model)
+	if err1 != nil {
+		return nil, err1
+	}
+	return model, nil
+}
+
 func GetAllScenes() ([]*Scene, error) {
 	var items = make([]*Scene, 0, 100)
 	cursor, err1 := findAll(TableScene, 0)
