@@ -1,4 +1,4 @@
-# omo-msa-user
+# omo-msa-organization
 Micro Service Agent - organization
 
 生成proto:

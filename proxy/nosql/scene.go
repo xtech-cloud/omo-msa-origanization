@@ -23,6 +23,7 @@ type Scene struct {
 	Cover    string   `json:"cover" bson:"cover"`
 	Master   string   `json:"master" bson:"master"`
 	Remark   string   `json:"remark" bson:"remark"`
+	Entity   string   `json:"entity" bson:"entity"`
 	Location string   `json:"location" bson:"location"`
 	Members  []string `json:"members" bson:"members"`
 }

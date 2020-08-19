@@ -30,6 +30,7 @@ type SceneInfo struct {
 	Cover string
 	Remark string
 	Master string
+	Entity string
 	members []string
 }
 
@@ -45,6 +46,7 @@ func CreateScene(info *SceneInfo) error {
 	db.Name = info.Name
 	db.Cover = info.Cover
 	db.Remark = info.Remark
+	db.Entity = info.Entity
 	db.Status = uint8(SceneStatusIdle)
 	db.Location = info.Location
 	db.Members = make([]string, 0, 1)
