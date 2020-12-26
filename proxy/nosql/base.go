@@ -18,6 +18,13 @@ import (
 var noSql *mongo.Database
 var dbClient *mongo.Client
 
+type AddressInfo struct {
+	Country string `json:"country" bson:"country"`
+	Province string `json:"province" bson:"province"`
+	City string `json:"city" bson:"city"`
+	Zone string `json:"zone" bson:"zone"`
+}
+
 func initMongoDB(ip string, port string, db string) error {
 	//mongodb://myuser:mypass@localhost:40001
 	addr := "mongodb://" + ip + ":" + port

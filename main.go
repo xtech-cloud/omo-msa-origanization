@@ -41,6 +41,7 @@ func main() {
 	service.Init()
 	// Register Handler
 	_ = proto.RegisterSceneServiceHandler(service.Server(), new(grpc.SceneService))
+	_ = proto.RegisterGroupServiceHandler(service.Server(), new(grpc.GroupService))
 
 	app, _ := filepath.Abs(os.Args[0])
 

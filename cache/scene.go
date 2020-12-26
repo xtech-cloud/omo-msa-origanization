@@ -2,6 +2,7 @@ package cache
 
 import (
 	"errors"
+	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.organization/proxy/nosql"
 	"time"
@@ -23,7 +24,7 @@ type SceneType uint8
 type SceneStatus uint8
 
 type SceneInfo struct {
-	BaseInfo
+	baseInfo
 	Type SceneType
 	Status SceneStatus
 	Location string
@@ -31,10 +32,12 @@ type SceneInfo struct {
 	Remark string
 	Master string
 	Entity string
+	Address nosql.AddressInfo
 	members []string
+	groups []*GroupInfo
 }
 
-func CreateScene(info *SceneInfo) error {
+func (mine *cacheContext)CreateScene(info *SceneInfo) error {
 	db := new(nosql.Scene)
 	db.UID = primitive.NewObjectID()
 	db.Type = uint8(info.Type)
@@ -49,6 +52,7 @@ func CreateScene(info *SceneInfo) error {
 	db.Entity = info.Entity
 	db.Status = uint8(SceneStatusIdle)
 	db.Location = info.Location
+	db.Address = info.Address
 	db.Members = make([]string, 0, 1)
 	err := nosql.CreateScene(db)
 	if err == nil {
@@ -58,7 +62,10 @@ func CreateScene(info *SceneInfo) error {
 	return err
 }
 
-func GetScene(uid string) *SceneInfo {
+func (mine *cacheContext)GetScene(uid string) *SceneInfo {
+	if len(uid) < 2 {
+		return nil
+	}
 	for i := 0;i < len(cacheCtx.scenes);i += 1{
 		if cacheCtx.scenes[i].UID == uid {
 			return cacheCtx.scenes[i]
@@ -74,7 +81,7 @@ func GetScene(uid string) *SceneInfo {
 	return nil
 }
 
-func GetSceneByMember(uid string) *SceneInfo {
+func (mine *cacheContext)GetSceneByMember(uid string) *SceneInfo {
 	for i := 0;i < len(cacheCtx.scenes);i += 1{
 		if cacheCtx.scenes[i].HadMember(uid) {
 			return cacheCtx.scenes[i]
@@ -90,24 +97,15 @@ func GetSceneByMember(uid string) *SceneInfo {
 	return nil
 }
 
-func GetScenes(number, page uint32) (uint32,uint32,[]*SceneInfo) {
+func (mine *cacheContext)GetScenes(number, page uint32) (uint32,uint32,[]*SceneInfo) {
 	if number < 1 {
 		number = 10
 	}
-	length := uint32(len(cacheCtx.scenes))
-	max := length / number + 1
-	if page < 1 {
-		return length,max, cacheCtx.scenes
+	if len(mine.scenes) <1 {
+		return 0, 0, make([]*SceneInfo, 0, 1)
 	}
-	list := make([]*SceneInfo, 0, number)
-	for i := 0;i < len(cacheCtx.scenes);i += 1{
-		t := uint32(i) / number + 1
-		if t == page {
-			list = append(list, cacheCtx.scenes[i])
-		}
-	}
-
-	return length, max, list
+	total, maxPage, list := checkPage(page, number, mine.scenes)
+	return total, maxPage, list.([]*SceneInfo)
 }
 
 func GetAllScenes() []*SceneInfo {
@@ -154,6 +152,18 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.Type = SceneType(db.Type)
 	mine.Status = SceneStatus(db.Status)
 	mine.members = db.Members
+	mine.Address = db.Address
+	groups,err := nosql.GetGroupsByScene(mine.UID)
+	if err == nil {
+		mine.groups = make([]*GroupInfo, 0, len(groups))
+		for i := 0;i < len(groups);i += 1 {
+			tmp := new(GroupInfo)
+			tmp.initInfo(groups[i])
+			mine.groups = append(mine.groups, tmp)
+		}
+	}else{
+		mine.groups = make([]*GroupInfo, 0, 1)
+	}
 }
 
 func (mine *SceneInfo)UpdateBase(name, remark, operator string) error {
@@ -197,6 +207,16 @@ func (mine *SceneInfo)UpdateLocation(local, operator string) error {
 	err := nosql.UpdateSceneLocal(mine.UID, local, operator)
 	if err == nil {
 		mine.Location = local
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *SceneInfo)UpdateAddress(country, province, city, zone, operator string) error {
+	addr := nosql.AddressInfo{Country: country, Province: province, City: city, Zone: zone}
+	err := nosql.UpdateSceneAddress(mine.UID, operator, addr)
+	if err == nil {
+		mine.Address = addr
 		mine.Operator = operator
 	}
 	return err
@@ -252,4 +272,88 @@ func (mine *SceneInfo)SubtractMember(member string) error {
 		}
 	}
 	return err
+}
+
+func (mine *SceneInfo)CreateGroup(info *pb.ReqGroupAdd) (*GroupInfo, error) {
+	db := new(nosql.Group)
+	db.UID = primitive.NewObjectID()
+	db.ID = nosql.GetGroupNextID()
+	db.CreatedTime = time.Now()
+	db.UpdatedTime = time.Now()
+	db.Operator = info.Operator
+	db.Creator = info.Operator
+	db.Name = info.Name
+	db.Cover = info.Cover
+	db.Remark = info.Remark
+	db.Location = info.Location
+	db.Contact = info.Contact
+	db.Address = nosql.AddressInfo{
+		Country: info.Address.Country,
+		Province: info.Address.Province,
+		City: info.Address.City,
+		Zone: info.Address.Zone,
+	}
+	db.Members = make([]string, 0, 1)
+	err := nosql.CreateGroup(db)
+	if err == nil {
+		tmp := new(GroupInfo)
+		tmp.initInfo(db)
+		mine.groups = append(mine.groups, tmp)
+		return tmp,nil
+	}
+	return nil,err
+}
+
+func (mine *SceneInfo)HadGroup(uid string) bool {
+	for _, group := range mine.groups {
+		if group.UID == uid {
+			return true
+		}
+	}
+	return false
+}
+
+func (mine *SceneInfo)HadGroupByName(name string) bool {
+	for _, group := range mine.groups {
+		if group.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (mine *SceneInfo)GetGroup(uid string) *GroupInfo {
+	for _, group := range mine.groups {
+		if group.UID == uid {
+			return group
+		}
+	}
+	return nil
+}
+
+func (mine *SceneInfo)RemoveGroup(uid, operator string) error {
+	if !mine.HadGroup(uid) {
+		return nil
+	}
+	err := nosql.RemoveGroup(uid, operator)
+	if err == nil {
+		for i := 0;i < len(mine.groups);i ++ {
+			if mine.groups[i].UID == uid {
+				mine.groups = append(mine.groups[:i], mine.groups[i+1:]...)
+				break
+			}
+		}
+	}
+	return err
+}
+
+func (mine *SceneInfo)GetGroups(number, page uint32) (uint32,uint32,[]*GroupInfo) {
+	if number < 1 {
+		number = 10
+	}
+	if len(mine.groups) <1 {
+		return 0, 0, make([]*GroupInfo, 0, 1)
+	}
+	total, maxPage, list := checkPage(page, number, mine.groups)
+	return total, maxPage, list.([]*GroupInfo)
 }

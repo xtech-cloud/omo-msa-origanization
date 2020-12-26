@@ -25,6 +25,7 @@ type Scene struct {
 	Remark   string   `json:"remark" bson:"remark"`
 	Entity   string   `json:"entity" bson:"entity"`
 	Location string   `json:"location" bson:"location"`
+	Address AddressInfo `json:"address" bson:"address"`
 	Members  []string `json:"members" bson:"members"`
 }
 
@@ -104,8 +105,14 @@ func UpdateSceneCover(uid string, icon, operator string) error {
 	return err
 }
 
-func UpdateSceneLocal(uid string, local, operator string) error {
+func UpdateSceneLocal(uid, local, operator string) error {
 	msg := bson.M{"location": local, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
+func UpdateSceneAddress(uid, operator string, address AddressInfo) error {
+	msg := bson.M{"address": address, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }
