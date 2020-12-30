@@ -98,7 +98,7 @@ func GetAllGroups() ([]*Group, error) {
 }
 
 func GetGroupsByScene(scene string) ([]*Group, error) {
-	cursor, err1 := findMany(TableGroup, bson.M{"scene": scene}, 0)
+	cursor, err1 := findMany(TableGroup, bson.M{"scene": scene, "deleteAt": new(time.Time)}, 0)
 	if err1 != nil {
 		return nil, err1
 	}

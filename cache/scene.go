@@ -287,6 +287,7 @@ func (mine *SceneInfo)CreateGroup(info *pb.ReqGroupAdd) (*GroupInfo, error) {
 	db.Remark = info.Remark
 	db.Location = info.Location
 	db.Contact = info.Contact
+	db.Scene = info.Scene
 	db.Address = nosql.AddressInfo{
 		Country: info.Address.Country,
 		Province: info.Address.Province,

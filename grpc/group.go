@@ -26,6 +26,11 @@ func switchGroup(info *cache.GroupInfo) *pb.GroupInfo {
 	tmp.Scene = info.Scene
 	tmp.Operator = info.Operator
 	tmp.Creator = info.Creator
+	tmp.Address = new(pb.AddressInfo)
+	tmp.Address.Country = info.Address.Country
+	tmp.Address.Province = info.Address.Province
+	tmp.Address.City = info.Address.City
+	tmp.Address.Zone = info.Address.Zone
 	return tmp
 }
 
@@ -77,7 +82,7 @@ func (mine *GroupService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 	}
 
 	if info == nil {
-		out.Status = outError(path,"the Group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
 		return nil
 	}
 	out.Info = switchGroup(info)
@@ -85,11 +90,11 @@ func (mine *GroupService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 	return nil
 }
 
-func (mine *GroupService)GetOnByContact(ctx context.Context, in *pb.RequestMember, out *pb.ReplyGroupList) error {
-	path := "group.getOne"
+func (mine *GroupService)GetByContact(ctx context.Context, in *pb.RequestMember, out *pb.ReplyGroupList) error {
+	path := "group.getByContact"
 	inLog(path, in)
-	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+	if len(in.Member) < 1 {
+		out.Status = outError(path,"the phone is empty ", pb.ResultStatus_Empty)
 		return nil
 	}
 	list := cache.Context().GetGroupByContact(in.Member)
@@ -101,11 +106,11 @@ func (mine *GroupService)GetOnByContact(ctx context.Context, in *pb.RequestMembe
 	return nil
 }
 
-func (mine *GroupService)GetOnByUser(ctx context.Context, in *pb.RequestMember, out *pb.ReplyGroupList) error {
-	path := "group.getOne"
+func (mine *GroupService)GetByUser(ctx context.Context, in *pb.RequestMember, out *pb.ReplyGroupList) error {
+	path := "group.getByUser"
 	inLog(path, in)
-	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+	if len(in.Member) < 1 {
+		out.Status = outError(path,"the user is empty ", pb.ResultStatus_Empty)
 		return nil
 	}
 	list := cache.Context().GetGroupByContact(in.Member)
@@ -181,7 +186,7 @@ func (mine *GroupService) UpdateBase (ctx context.Context, in *pb.ReqGroupUpdate
 			return nil
 		}
 		if in.Name != info.Name && scene.HadGroupByName(in.Name) {
-			out.Status = outError(path,"not found the scene ", pb.ResultStatus_Repeated)
+			out.Status = outError(path,"the department name repeated ", pb.ResultStatus_Repeated)
 			return nil
 		}
 		err = info.UpdateBase(in.Name, in.Remark, in.Operator)
@@ -196,7 +201,7 @@ func (mine *GroupService) UpdateBase (ctx context.Context, in *pb.ReqGroupUpdate
 }
 
 func (mine *GroupService) UpdateAddress (ctx context.Context, in *pb.RequestAddress, out *pb.ReplyGroupOne) error {
-	path := "group.updateBase"
+	path := "group.updateAddress"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
