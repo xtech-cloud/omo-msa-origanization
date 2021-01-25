@@ -113,7 +113,7 @@ func (mine *GroupService)GetByUser(ctx context.Context, in *pb.RequestMember, ou
 		out.Status = outError(path,"the user is empty ", pb.ResultStatus_Empty)
 		return nil
 	}
-	list := cache.Context().GetGroupByContact(in.Member)
+	list := cache.Context().GetGroupByMember(in.Member)
 	out.List = make([]*pb.GroupInfo, 0, len(list))
 	for _, info := range list {
 		out.List = append(out.List, switchGroup(info))
@@ -253,7 +253,7 @@ func (mine *GroupService) UpdateLocation (ctx context.Context, in *pb.RequestFla
 }
 
 func (mine *GroupService) UpdateContact (ctx context.Context, in *pb.RequestFlag, out *pb.ReplyInfo) error {
-	path := "group.updateLocation"
+	path := "group.updateContact"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)

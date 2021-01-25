@@ -153,7 +153,7 @@ func (mine *GroupInfo)UpdateAddress(country, province, city, zone, operator stri
 
 
 func (mine *GroupInfo)HadMember(member string) bool {
-	if mine.Master == member {
+	if mine.Master == member || mine.Assistant == member {
 		return true
 	}
 	for i := 0;i < len(mine.members);i += 1 {
