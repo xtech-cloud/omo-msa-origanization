@@ -17,12 +17,6 @@ import (
 	"time"
 )
 
-var (
-	BuildVersion string
-	BuildTime    string
-	CommitID     string
-)
-
 func main() {
 	config.Setup()
 	err := cache.InitData()
@@ -45,9 +39,6 @@ func main() {
 
 	app, _ := filepath.Abs(os.Args[0])
 
-	BuildVersion := "1.2.0"
-	BuildTime := time.Now().String()
-	CommitID := "3"
 	logger.Info("-------------------------------------------------------------")
 	logger.Info("- Micro Service Agent -> Run")
 	logger.Info("-------------------------------------------------------------")
