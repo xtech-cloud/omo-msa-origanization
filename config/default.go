@@ -8,7 +8,7 @@ const defaultJson string = `{
 	},
 	"logger": {
 		"level": "info",
-		"file": "/var/log/msa/",
+		"file": "logs/server.log",
 		"std": false
 	},
 	"database": {
