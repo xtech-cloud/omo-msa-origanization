@@ -24,6 +24,7 @@ func switchScene(info *cache.SceneInfo) *pb.SceneInfo {
 	tmp.Entity = info.Entity
 	tmp.Operator = info.Operator
 	tmp.Creator = info.Creator
+	tmp.Exhibitions = info.Exhibitions
 	return tmp
 }
 
@@ -232,50 +233,98 @@ func (mine *SceneService) UpdateStatus (ctx context.Context, in *pb.ReqSceneStat
 	return nil
 }
 
-func (mine *SceneService) AppendMember (ctx context.Context, in *pb.RequestMember, out *pb.ReplyMembers) error {
+func (mine *SceneService) AppendMember (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
 	path := "scene.appendMember"
 	inLog(path, in)
-	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+	if len(in.Parent) < 1 {
+		out.Status = outError(path,"the parent is empty ", pb.ResultStatus_Empty)
 		return nil
 	}
-	info := cache.Context().GetScene(in.Uid)
+	info := cache.Context().GetScene(in.Parent)
 	if info == nil {
 		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
 		return nil
 	}
 
-	err := info.AppendMember(in.Member)
+	err := info.AppendMember(in.Uid)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
 		return nil
 	}
 	out.Uid = in.Uid
-	out.Members = info.AllMembers()
+	out.List = info.AllMembers()
 	out.Status = outLog(path, out)
 	return nil
 }
 
-func (mine *SceneService) SubtractMember (ctx context.Context, in *pb.RequestMember, out *pb.ReplyMembers) error {
+func (mine *SceneService) SubtractMember (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
 	path := "scene.subtractMember"
 	inLog(path, in)
-	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+	if len(in.Parent) < 1 {
+		out.Status = outError(path,"the parent is empty ", pb.ResultStatus_Empty)
 		return nil
 	}
-	info := cache.Context().GetScene(in.Uid)
+	info := cache.Context().GetScene(in.Parent)
 	if info == nil {
 		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
 		return nil
 	}
 
-	err := info.SubtractMember(in.Member)
+	err := info.SubtractMember(in.Uid)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
 		return nil
 	}
 	out.Uid = in.Uid
-	out.Members = info.AllMembers()
+	out.List = info.AllMembers()
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *SceneService) PutOnDisplay (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
+	path := "scene.putOnDisplay"
+	inLog(path, in)
+	if len(in.Parent) < 1 {
+		out.Status = outError(path,"the parent is empty ", pb.ResultStatus_Empty)
+		return nil
+	}
+	info := cache.Context().GetScene(in.Parent)
+	if info == nil {
+		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
+		return nil
+	}
+
+	err := info.PutOnDisplay(in.Uid)
+	if err != nil {
+		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		return nil
+	}
+	out.Uid = in.Uid
+	out.List = info.Exhibitions
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *SceneService) CancelDisplay (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
+	path := "scene.cancelDisplay"
+	inLog(path, in)
+	if len(in.Parent) < 1 {
+		out.Status = outError(path,"the parent is empty ", pb.ResultStatus_Empty)
+		return nil
+	}
+	info := cache.Context().GetScene(in.Parent)
+	if info == nil {
+		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
+		return nil
+	}
+
+	err := info.CancelDisplay(in.Uid)
+	if err != nil {
+		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		return nil
+	}
+	out.Uid = in.Uid
+	out.List = info.Exhibitions
 	out.Status = outLog(path, out)
 	return nil
 }

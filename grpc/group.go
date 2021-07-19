@@ -90,14 +90,14 @@ func (mine *GroupService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 	return nil
 }
 
-func (mine *GroupService)GetByContact(ctx context.Context, in *pb.RequestMember, out *pb.ReplyGroupList) error {
+func (mine *GroupService)GetByContact(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyGroupList) error {
 	path := "group.getByContact"
 	inLog(path, in)
-	if len(in.Member) < 1 {
+	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the phone is empty ", pb.ResultStatus_Empty)
 		return nil
 	}
-	list := cache.Context().GetGroupByContact(in.Member)
+	list := cache.Context().GetGroupByContact(in.Uid)
 	out.List = make([]*pb.GroupInfo, 0, len(list))
 	for _, info := range list {
 		out.List = append(out.List, switchGroup(info))
@@ -106,14 +106,14 @@ func (mine *GroupService)GetByContact(ctx context.Context, in *pb.RequestMember,
 	return nil
 }
 
-func (mine *GroupService)GetByUser(ctx context.Context, in *pb.RequestMember, out *pb.ReplyGroupList) error {
+func (mine *GroupService)GetByUser(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyGroupList) error {
 	path := "group.getByUser"
 	inLog(path, in)
-	if len(in.Member) < 1 {
+	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the user is empty ", pb.ResultStatus_Empty)
 		return nil
 	}
-	list := cache.Context().GetGroupByMember(in.Member)
+	list := cache.Context().GetGroupByMember(in.Uid)
 	out.List = make([]*pb.GroupInfo, 0, len(list))
 	for _, info := range list {
 		out.List = append(out.List, switchGroup(info))
@@ -155,10 +155,7 @@ func (mine *GroupService)GetList(ctx context.Context, in *pb.RequestPage, out *p
 	out.PageNow = in.Page
 	out.Total = total
 	out.PageMax = max
-	out.Status = &pb.ReplyStatus{
-		Code: 0,
-		Error: "",
-	}
+	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
 }
 
@@ -316,50 +313,50 @@ func (mine *GroupService) UpdateAssistant (ctx context.Context, in *pb.RequestFl
 	return nil
 }
 
-func (mine *GroupService) AppendMember (ctx context.Context, in *pb.RequestMember, out *pb.ReplyMembers) error {
+func (mine *GroupService) AppendMember (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
 	path := "group.appendMember"
 	inLog(path, in)
-	if len(in.Uid) < 1 {
+	if len(in.Parent) < 1 {
 		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
 		return nil
 	}
-	info := cache.Context().GetGroup(in.Uid)
+	info := cache.Context().GetGroup(in.Parent)
 	if info == nil {
 		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
 		return nil
 	}
 
-	err := info.AppendMember(in.Member)
+	err := info.AppendMember(in.Uid)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
 		return nil
 	}
 	out.Uid = in.Uid
-	out.Members = info.AllMembers()
+	out.List = info.AllMembers()
 	out.Status = outLog(path, out)
 	return nil
 }
 
-func (mine *GroupService) SubtractMember (ctx context.Context, in *pb.RequestMember, out *pb.ReplyMembers) error {
+func (mine *GroupService) SubtractMember (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
 	path := "group.subtractMember"
 	inLog(path, in)
-	if len(in.Uid) < 1 {
+	if len(in.Parent) < 1 {
 		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
 		return nil
 	}
-	info := cache.Context().GetGroup(in.Uid)
+	info := cache.Context().GetGroup(in.Parent)
 	if info == nil {
 		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
 		return nil
 	}
 
-	err := info.SubtractMember(in.Member)
+	err := info.SubtractMember(in.Uid)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
 		return nil
 	}
 	out.Uid = in.Uid
-	out.Members = info.AllMembers()
+	out.List = info.AllMembers()
 	out.Status = outLog(path, out)
 	return nil
 }

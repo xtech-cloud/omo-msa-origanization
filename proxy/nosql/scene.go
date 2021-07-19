@@ -27,6 +27,7 @@ type Scene struct {
 	Location string   `json:"location" bson:"location"`
 	Address AddressInfo `json:"address" bson:"address"`
 	Members  []string `json:"members" bson:"members"`
+	Exhibitions []string `json:"exhibitions" bson:"exhibitions"`
 }
 
 func CreateScene(info *Scene) error {
@@ -142,6 +143,24 @@ func SubtractSceneMember(uid, member string) error {
 		return errors.New("the uid is empty")
 	}
 	msg := bson.M{"members": member}
+	_, err := removeElement(TableScene, uid, msg)
+	return err
+}
+
+func AppendSceneDisplay(uid, display string) error {
+	if len(uid) < 1 {
+		return errors.New("the uid is empty")
+	}
+	msg := bson.M{"exhibitions": display}
+	_, err := appendElement(TableScene, uid, msg)
+	return err
+}
+
+func SubtractSceneDisplay(uid, display string) error {
+	if len(uid) < 1 {
+		return errors.New("the uid is empty")
+	}
+	msg := bson.M{"exhibitions": display}
 	_, err := removeElement(TableScene, uid, msg)
 	return err
 }

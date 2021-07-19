@@ -34,6 +34,7 @@ type SceneInfo struct {
 	Entity string
 	Address nosql.AddressInfo
 	members []string
+	Exhibitions []string
 	groups []*GroupInfo
 }
 
@@ -53,6 +54,7 @@ func (mine *cacheContext)CreateScene(info *SceneInfo) error {
 	db.Status = uint8(SceneStatusIdle)
 	db.Location = info.Location
 	db.Address = info.Address
+	db.Exhibitions = make([]string, 0, 1)
 	db.Members = make([]string, 0, 1)
 	err := nosql.CreateScene(db)
 	if err == nil {
@@ -153,6 +155,11 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.Status = SceneStatus(db.Status)
 	mine.members = db.Members
 	mine.Address = db.Address
+	mine.Exhibitions = db.Exhibitions
+	if mine.Exhibitions == nil {
+		mine.Exhibitions = make([]string, 0, 1)
+	}
+
 	groups,err := nosql.GetGroupsByScene(mine.UID)
 	if err == nil {
 		mine.groups = make([]*GroupInfo, 0, len(groups))
@@ -243,6 +250,15 @@ func (mine *SceneInfo)HadMember(member string) bool {
 	return false
 }
 
+func (mine *SceneInfo)HadExhibition(uid string) bool {
+	for i := 0;i < len(mine.Exhibitions);i += 1 {
+		if mine.Exhibitions[i] == uid {
+			return true
+		}
+	}
+	return false
+}
+
 func (mine *SceneInfo)AllMembers() []string {
 	return mine.members
 }
@@ -267,6 +283,33 @@ func (mine *SceneInfo)SubtractMember(member string) error {
 		for i := 0;i < len(mine.members);i += 1 {
 			if mine.members[i] == member {
 				mine.members = append(mine.members[:i], mine.members[i+1:]...)
+				break
+			}
+		}
+	}
+	return err
+}
+
+func (mine *SceneInfo)PutOnDisplay(uid string) error {
+	if mine.HadExhibition(uid){
+		return nil
+	}
+	err := nosql.AppendSceneDisplay(mine.UID, uid)
+	if err == nil {
+		mine.Exhibitions = append(mine.Exhibitions, uid)
+	}
+	return err
+}
+
+func (mine *SceneInfo)CancelDisplay(uid string) error {
+	if !mine.HadExhibition(uid){
+		return nil
+	}
+	err := nosql.SubtractSceneDisplay(mine.UID, uid)
+	if err == nil {
+		for i := 0;i < len(mine.Exhibitions);i += 1 {
+			if mine.Exhibitions[i] == uid {
+				mine.Exhibitions = append(mine.Exhibitions[:i], mine.Exhibitions[i+1:]...)
 				break
 			}
 		}
