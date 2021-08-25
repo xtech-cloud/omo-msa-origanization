@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"omo.msa.organization/proxy"
 	"time"
 )
 
@@ -17,17 +18,18 @@ type Scene struct {
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Name     string   `json:"name" bson:"name"`
-	Type     uint8    `json:"type" bson:"type"`
-	Status   uint8    `json:"status" bson:"status"`
-	Cover    string   `json:"cover" bson:"cover"`
-	Master   string   `json:"master" bson:"master"`
-	Remark   string   `json:"remark" bson:"remark"`
-	Entity   string   `json:"entity" bson:"entity"`
-	Location string   `json:"location" bson:"location"`
-	Address AddressInfo `json:"address" bson:"address"`
-	Members  []string `json:"members" bson:"members"`
-	Exhibitions []string `json:"exhibitions" bson:"exhibitions"`
+	Name     string              `json:"name" bson:"name"`
+	Type     uint8               `json:"type" bson:"type"`
+	Status   uint8               `json:"status" bson:"status"`
+	Cover    string              `json:"cover" bson:"cover"`
+	Master   string              `json:"master" bson:"master"`
+	Remark   string              `json:"remark" bson:"remark"`
+	Entity   string              `json:"entity" bson:"entity"`
+	Location string              `json:"location" bson:"location"`
+	Address  AddressInfo         `json:"address" bson:"address"`
+	Exhibitions []string 		 `json:"exhibitions" bson:"exhibitions"`
+	Displays []proxy.ShowingInfo `json:"displays" bson:"displays"`
+	Members  []string            `json:"members" bson:"members"`
 }
 
 func CreateScene(info *Scene) error {
@@ -147,11 +149,17 @@ func SubtractSceneMember(uid, member string) error {
 	return err
 }
 
-func AppendSceneDisplay(uid, display string) error {
+func UpdateSceneDisplay(uid, operator string, list []proxy.ShowingInfo) error {
+	msg := bson.M{"displays": list, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
+func AppendSceneDisplay(uid string, display *proxy.ShowingInfo) error {
 	if len(uid) < 1 {
 		return errors.New("the uid is empty")
 	}
-	msg := bson.M{"exhibitions": display}
+	msg := bson.M{"displays": display}
 	_, err := appendElement(TableScene, uid, msg)
 	return err
 }
@@ -160,7 +168,7 @@ func SubtractSceneDisplay(uid, display string) error {
 	if len(uid) < 1 {
 		return errors.New("the uid is empty")
 	}
-	msg := bson.M{"exhibitions": display}
+	msg := bson.M{"displays": bson.M{"uid": display}}
 	_, err := removeElement(TableScene, uid, msg)
 	return err
 }

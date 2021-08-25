@@ -4,6 +4,7 @@ import (
 	"context"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"omo.msa.organization/cache"
+	"omo.msa.organization/proxy"
 )
 
 type SceneService struct {}
@@ -24,8 +25,16 @@ func switchScene(info *cache.SceneInfo) *pb.SceneInfo {
 	tmp.Entity = info.Entity
 	tmp.Operator = info.Operator
 	tmp.Creator = info.Creator
-	tmp.Exhibitions = info.Exhibitions
+	tmp.Exhibitions = switchExhibitions(info.Exhibitions)
 	return tmp
+}
+
+func switchExhibitions(list []proxy.ShowingInfo) []*pb.ExhibitInfo {
+	array := make([]*pb.ExhibitInfo, 0, len(list))
+	for _, info := range list {
+		array = append(array, &pb.ExhibitInfo{Uid: info.UID, Effect: info.Effect, Slots:info.Slots})
+	}
+	return array
 }
 
 func (mine *SceneService)AddOne(ctx context.Context, in *pb.ReqSceneAdd, out *pb.ReplySceneOne) error {
@@ -281,7 +290,31 @@ func (mine *SceneService) SubtractMember (ctx context.Context, in *pb.RequestInf
 	return nil
 }
 
-func (mine *SceneService) PutOnDisplay (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
+func (mine *SceneService) UpdateDisplay (ctx context.Context, in *pb.ReqSceneDisplay, out *pb.ReplySceneDisplays) error {
+	path := "scene.updateDisplay"
+	inLog(path, in)
+	if len(in.Scene) < 1 {
+		out.Status = outError(path,"the parent is empty ", pb.ResultStatus_Empty)
+		return nil
+	}
+	info := cache.Context().GetScene(in.Scene)
+	if info == nil {
+		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
+		return nil
+	}
+
+	err := info.UpdateDisplay(in.Uid, in.Key, in.Operator, in.Slots)
+	if err != nil {
+		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		return nil
+	}
+	out.Uid = in.Uid
+	out.List = switchExhibitions(info.Exhibitions)
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *SceneService) PutOnDisplay (ctx context.Context, in *pb.RequestInfo, out *pb.ReplySceneDisplays) error {
 	path := "scene.putOnDisplay"
 	inLog(path, in)
 	if len(in.Parent) < 1 {
@@ -300,12 +333,12 @@ func (mine *SceneService) PutOnDisplay (ctx context.Context, in *pb.RequestInfo,
 		return nil
 	}
 	out.Uid = in.Uid
-	out.List = info.Exhibitions
+	out.List = switchExhibitions(info.Exhibitions)
 	out.Status = outLog(path, out)
 	return nil
 }
 
-func (mine *SceneService) CancelDisplay (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
+func (mine *SceneService) CancelDisplay (ctx context.Context, in *pb.RequestInfo, out *pb.ReplySceneDisplays) error {
 	path := "scene.cancelDisplay"
 	inLog(path, in)
 	if len(in.Parent) < 1 {
@@ -324,7 +357,7 @@ func (mine *SceneService) CancelDisplay (ctx context.Context, in *pb.RequestInfo
 		return nil
 	}
 	out.Uid = in.Uid
-	out.List = info.Exhibitions
+	out.List = switchExhibitions(info.Exhibitions)
 	out.Status = outLog(path, out)
 	return nil
 }

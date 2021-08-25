@@ -4,6 +4,7 @@ import (
 	"errors"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"omo.msa.organization/proxy"
 	"omo.msa.organization/proxy/nosql"
 	"time"
 )
@@ -34,7 +35,7 @@ type SceneInfo struct {
 	Entity string
 	Address nosql.AddressInfo
 	members []string
-	Exhibitions []string
+	Exhibitions []proxy.ShowingInfo
 	groups []*GroupInfo
 }
 
@@ -54,7 +55,7 @@ func (mine *cacheContext)CreateScene(info *SceneInfo) error {
 	db.Status = uint8(SceneStatusIdle)
 	db.Location = info.Location
 	db.Address = info.Address
-	db.Exhibitions = make([]string, 0, 1)
+	db.Displays = make([]proxy.ShowingInfo, 0, 1)
 	db.Members = make([]string, 0, 1)
 	err := nosql.CreateScene(db)
 	if err == nil {
@@ -155,9 +156,9 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.Status = SceneStatus(db.Status)
 	mine.members = db.Members
 	mine.Address = db.Address
-	mine.Exhibitions = db.Exhibitions
+	mine.Exhibitions = db.Displays
 	if mine.Exhibitions == nil {
-		mine.Exhibitions = make([]string, 0, 1)
+		mine.Exhibitions = make([]proxy.ShowingInfo, 0, 1)
 	}
 
 	groups,err := nosql.GetGroupsByScene(mine.UID)
@@ -252,7 +253,7 @@ func (mine *SceneInfo)HadMember(member string) bool {
 
 func (mine *SceneInfo)HadExhibition(uid string) bool {
 	for i := 0;i < len(mine.Exhibitions);i += 1 {
-		if mine.Exhibitions[i] == uid {
+		if mine.Exhibitions[i].UID == uid {
 			return true
 		}
 	}
@@ -290,13 +291,33 @@ func (mine *SceneInfo)SubtractMember(member string) error {
 	return err
 }
 
+func (mine *SceneInfo)UpdateDisplay(uid, effect, operator string, slots []string) error {
+	if !mine.HadExhibition(uid){
+		return nil
+	}
+	array := make([]proxy.ShowingInfo, 0, len(mine.Exhibitions))
+	for _, info := range mine.Exhibitions {
+		if info.UID == uid {
+			info.Effect = effect
+			info.Slots = slots
+		}
+		array = append(array, info)
+	}
+	err := nosql.UpdateSceneDisplay(mine.UID, operator, array)
+	if err == nil {
+		mine.Exhibitions = array
+	}
+	return err
+}
+
 func (mine *SceneInfo)PutOnDisplay(uid string) error {
 	if mine.HadExhibition(uid){
 		return nil
 	}
-	err := nosql.AppendSceneDisplay(mine.UID, uid)
+	info := proxy.ShowingInfo{UID: uid, Effect: ""}
+	err := nosql.AppendSceneDisplay(mine.UID, &info)
 	if err == nil {
-		mine.Exhibitions = append(mine.Exhibitions, uid)
+		mine.Exhibitions = append(mine.Exhibitions, info)
 	}
 	return err
 }
@@ -308,7 +329,7 @@ func (mine *SceneInfo)CancelDisplay(uid string) error {
 	err := nosql.SubtractSceneDisplay(mine.UID, uid)
 	if err == nil {
 		for i := 0;i < len(mine.Exhibitions);i += 1 {
-			if mine.Exhibitions[i] == uid {
+			if mine.Exhibitions[i].UID == uid {
 				mine.Exhibitions = append(mine.Exhibitions[:i], mine.Exhibitions[i+1:]...)
 				break
 			}
