@@ -13,6 +13,7 @@ const (
 	SceneTypeOther SceneType = 0
 	SceneTypeSchool SceneType = 1
 	SceneTypeMuseum SceneType = 2
+	SceneTypeYoung SceneType = 3
 )
 
 const (
@@ -33,8 +34,10 @@ type SceneInfo struct {
 	Remark string
 	Master string
 	Entity string
+	Supporter string
 	Address nosql.AddressInfo
 	members []string
+	parents []string
 	Exhibitions []proxy.ShowingInfo
 	groups []*GroupInfo
 }
@@ -57,6 +60,8 @@ func (mine *cacheContext)CreateScene(info *SceneInfo) error {
 	db.Address = info.Address
 	db.Displays = make([]proxy.ShowingInfo, 0, 1)
 	db.Members = make([]string, 0, 1)
+	db.Parents = make([]string, 0, 1)
+	db.Supporter = ""
 	err := nosql.CreateScene(db)
 	if err == nil {
 		info.initInfo(db)
@@ -156,6 +161,11 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.Status = SceneStatus(db.Status)
 	mine.members = db.Members
 	mine.Address = db.Address
+	mine.Supporter = db.Supporter
+	mine.parents = db.Parents
+	if mine.parents == nil {
+		mine.parents = make([]string, 0, 1)
+	}
 	mine.Exhibitions = db.Displays
 	if mine.Exhibitions == nil {
 		mine.Exhibitions = make([]proxy.ShowingInfo, 0, 1)
@@ -211,6 +221,15 @@ func (mine *SceneInfo)UpdateCover(cover, operator string) error {
 	return err
 }
 
+func (mine *SceneInfo)UpdateType(operator string, tp uint8) error {
+	err := nosql.UpdateSceneType(mine.UID, operator, tp)
+	if err == nil {
+		mine.Type = SceneType(tp)
+		mine.Operator = operator
+	}
+	return err
+}
+
 func (mine *SceneInfo)UpdateLocation(local, operator string) error {
 	err := nosql.UpdateSceneLocal(mine.UID, local, operator)
 	if err == nil {
@@ -234,6 +253,15 @@ func (mine *SceneInfo)UpdateStatus(st SceneStatus, operator string) error {
 	err := nosql.UpdateSceneStatus(mine.UID, uint8(st), operator)
 	if err == nil {
 		mine.Status = st
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *SceneInfo)UpdateSupporter(supporter, operator string) error {
+	err := nosql.UpdateSceneSupporter(mine.UID, supporter, operator)
+	if err == nil {
+		mine.Supporter = supporter
 		mine.Operator = operator
 	}
 	return err
@@ -291,7 +319,22 @@ func (mine *SceneInfo)SubtractMember(member string) error {
 	return err
 }
 
-func (mine *SceneInfo)UpdateDisplay(uid, effect, operator string, slots []string) error {
+func (mine *SceneInfo)Parents() []string {
+	return mine.parents
+}
+
+func (mine *SceneInfo) UpdateParents(operator string, list []string) error {
+	if list == nil {
+		return errors.New("the children is nil")
+	}
+	err := nosql.UpdateSceneParents(mine.UID,operator, list)
+	if err == nil {
+		mine.parents = list
+	}
+	return err
+}
+
+func (mine *SceneInfo)UpdateDisplay(uid, effect, skin, operator string, slots []string) error {
 	if !mine.HadExhibition(uid){
 		return nil
 	}
@@ -299,6 +342,7 @@ func (mine *SceneInfo)UpdateDisplay(uid, effect, operator string, slots []string
 	for _, info := range mine.Exhibitions {
 		if info.UID == uid {
 			info.Effect = effect
+			info.Skin = skin
 			info.Slots = slots
 		}
 		array = append(array, info)

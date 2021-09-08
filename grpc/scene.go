@@ -25,6 +25,9 @@ func switchScene(info *cache.SceneInfo) *pb.SceneInfo {
 	tmp.Entity = info.Entity
 	tmp.Operator = info.Operator
 	tmp.Creator = info.Creator
+	tmp.Supporter = info.Supporter
+	tmp.Parents = info.Parents()
+	tmp.Members = info.AllMembers()
 	tmp.Exhibitions = switchExhibitions(info.Exhibitions)
 	return tmp
 }
@@ -32,7 +35,7 @@ func switchScene(info *cache.SceneInfo) *pb.SceneInfo {
 func switchExhibitions(list []proxy.ShowingInfo) []*pb.ExhibitInfo {
 	array := make([]*pb.ExhibitInfo, 0, len(list))
 	for _, info := range list {
-		array = append(array, &pb.ExhibitInfo{Uid: info.UID, Effect: info.Effect, Slots:info.Slots})
+		array = append(array, &pb.ExhibitInfo{Uid: info.UID, Effect: info.Effect, Skin: info.Skin, Slots:info.Slots})
 	}
 	return array
 }
@@ -166,6 +169,9 @@ func (mine *SceneService) UpdateBase (ctx context.Context, in *pb.ReqSceneUpdate
 	if len(in.Name) > 0 || len(in.Remark) > 0 {
 		err = info.UpdateBase(in.Name, in.Remark, in.Operator)
 	}
+	if in.Type > 0 {
+		err = info.UpdateType(in.Operator, uint8(in.Type))
+	}
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
 		return nil
@@ -242,6 +248,32 @@ func (mine *SceneService) UpdateStatus (ctx context.Context, in *pb.ReqSceneStat
 	return nil
 }
 
+func (mine *SceneService) UpdateSupporter (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
+	path := "scene.updateSupporter"
+	inLog(path, in)
+	if len(in.Uid) < 1 {
+		out.Status = outError(path,"the supporter uid is empty ", pb.ResultStatus_Empty)
+		return nil
+	}
+	if len(in.Parent) < 1 {
+		out.Status = outError(path,"the scene uid is empty ", pb.ResultStatus_Empty)
+		return nil
+	}
+	info := cache.Context().GetScene(in.Parent)
+	if info == nil {
+		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
+		return nil
+	}
+
+	err := info.UpdateSupporter(in.Uid,in.Operator)
+	if err != nil {
+		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		return nil
+	}
+	out.Status = outLog(path, out)
+	return nil
+}
+
 func (mine *SceneService) AppendMember (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
 	path := "scene.appendMember"
 	inLog(path, in)
@@ -303,7 +335,7 @@ func (mine *SceneService) UpdateDisplay (ctx context.Context, in *pb.ReqSceneDis
 		return nil
 	}
 
-	err := info.UpdateDisplay(in.Uid, in.Key, in.Operator, in.Slots)
+	err := info.UpdateDisplay(in.Uid, in.Key, in.Skin, in.Operator, in.Slots)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
 		return nil
@@ -358,6 +390,30 @@ func (mine *SceneService) CancelDisplay (ctx context.Context, in *pb.RequestInfo
 	}
 	out.Uid = in.Uid
 	out.List = switchExhibitions(info.Exhibitions)
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *SceneService) UpdateParents (ctx context.Context, in *pb.RequestList, out *pb.ReplyList) error {
+	path := "scene.updateChildren"
+	inLog(path, in)
+	if len(in.Uid) < 1 {
+		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		return nil
+	}
+	info := cache.Context().GetScene(in.Uid)
+	if info == nil {
+		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
+		return nil
+	}
+
+	err := info.UpdateParents(in.Operator, in.List)
+	if err != nil {
+		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		return nil
+	}
+	out.Uid = in.Uid
+	out.List = info.Parents()
 	out.Status = outLog(path, out)
 	return nil
 }

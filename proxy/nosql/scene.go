@@ -18,18 +18,20 @@ type Scene struct {
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Name     string              `json:"name" bson:"name"`
-	Type     uint8               `json:"type" bson:"type"`
-	Status   uint8               `json:"status" bson:"status"`
-	Cover    string              `json:"cover" bson:"cover"`
-	Master   string              `json:"master" bson:"master"`
-	Remark   string              `json:"remark" bson:"remark"`
-	Entity   string              `json:"entity" bson:"entity"`
-	Location string              `json:"location" bson:"location"`
-	Address  AddressInfo         `json:"address" bson:"address"`
-	Exhibitions []string 		 `json:"exhibitions" bson:"exhibitions"`
-	Displays []proxy.ShowingInfo `json:"displays" bson:"displays"`
-	Members  []string            `json:"members" bson:"members"`
+	Name        string              `json:"name" bson:"name"`
+	Type        uint8               `json:"type" bson:"type"`
+	Status      uint8               `json:"status" bson:"status"`
+	Cover       string              `json:"cover" bson:"cover"`
+	Master      string              `json:"master" bson:"master"`
+	Remark      string              `json:"remark" bson:"remark"`
+	Entity      string              `json:"entity" bson:"entity"`
+	Location    string              `json:"location" bson:"location"`
+	Supporter   string              `json:"supporter" bson:"supporter"`
+	Address     AddressInfo         `json:"address" bson:"address"`
+	Exhibitions []string            `json:"exhibitions" bson:"exhibitions"`
+	Displays    []proxy.ShowingInfo `json:"displays" bson:"displays"`
+	Members     []string            `json:"members" bson:"members"`
+	Parents     []string            `json:"parents" bson:"parents"`
 }
 
 func CreateScene(info *Scene) error {
@@ -59,7 +61,7 @@ func GetScene(uid string) (*Scene, error) {
 }
 
 func GetSceneByMaster(user string) (*Scene, error) {
-	msg := bson.M{"master":user}
+	msg := bson.M{"master": user}
 	result, err := findOneBy(TableScene, msg)
 	if err != nil {
 		return nil, err
@@ -102,8 +104,14 @@ func UpdateSceneMaster(uid, master, operator string) error {
 	return err
 }
 
-func UpdateSceneCover(uid string, icon, operator string) error {
+func UpdateSceneCover(uid, icon, operator string) error {
 	msg := bson.M{"cover": icon, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
+func UpdateSceneType(uid, operator string, tp uint8) error {
+	msg := bson.M{"type": tp, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }
@@ -122,6 +130,18 @@ func UpdateSceneAddress(uid, operator string, address AddressInfo) error {
 
 func UpdateSceneStatus(uid string, status uint8, operator string) error {
 	msg := bson.M{"status": status, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
+func UpdateSceneSupporter(uid, supporter, operator string) error {
+	msg := bson.M{"supporter": supporter, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
+func UpdateSceneParents(uid, operator string, list []string) error {
+	msg := bson.M{"parents": list, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }
