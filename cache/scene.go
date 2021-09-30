@@ -157,6 +157,7 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.Remark = db.Remark
 	mine.Master = db.Master
 	mine.Location = db.Location
+	mine.Entity = db.Entity
 	mine.Type = SceneType(db.Type)
 	mine.Status = SceneStatus(db.Status)
 	mine.members = db.Members

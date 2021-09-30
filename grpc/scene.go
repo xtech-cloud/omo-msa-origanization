@@ -55,6 +55,7 @@ func (mine *SceneService)AddOne(ctx context.Context, in *pb.ReqSceneAdd, out *pb
 	info.Type = cache.SceneType(in.Type)
 	info.Cover = in.Cover
 	info.Entity = in.Entity
+	info.Creator = in.Operator
 	err := cache.Context().CreateScene(info)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
@@ -334,7 +335,9 @@ func (mine *SceneService) UpdateDisplay (ctx context.Context, in *pb.ReqSceneDis
 		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
 		return nil
 	}
-
+	if in.Slots == nil {
+		in.Slots = make([]string, 0, 1)
+	}
 	err := info.UpdateDisplay(in.Uid, in.Key, in.Skin, in.Operator, in.Slots)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
