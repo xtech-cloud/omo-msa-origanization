@@ -6,3 +6,9 @@ type ShowingInfo struct {
 	Skin string `json:"skin" bson:"skin"`
 	Slots []string `json:"slots" bson:"slots"`
 }
+
+type DeviceInfo struct {
+	Type uint8 `json:"type" bson:"type"`
+	UID string `json:"uid" bson:"uid"`
+	Remark string `json:"remark" bson:"remark"`
+}

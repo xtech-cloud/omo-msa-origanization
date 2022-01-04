@@ -10,10 +10,12 @@ import (
 )
 
 const (
-	SceneTypeOther SceneType = 0
-	SceneTypeSchool SceneType = 1
-	SceneTypeMuseum SceneType = 2
-	SceneTypeYoung SceneType = 3
+	SceneTypeOther SceneType = 0 // 未知
+	SceneTypeSchool SceneType = 1 // 学校
+	SceneTypeMuseum SceneType = 2 // 博物馆
+	SceneTypeYoung SceneType = 3 // 少年宫
+	SceneTypeNursery SceneType = 4 // 幼儿园
+	SceneTypeMaker SceneType = 5 //实践中心，创客
 )
 
 const (
@@ -35,11 +37,13 @@ type SceneInfo struct {
 	Master string
 	Entity string
 	Supporter string
+	Domain string
 	Address nosql.AddressInfo
 	members []string
 	parents []string
 	Exhibitions []proxy.ShowingInfo
 	groups []*GroupInfo
+	devices []proxy.DeviceInfo
 }
 
 func (mine *cacheContext)CreateScene(info *SceneInfo) error {
@@ -62,6 +66,7 @@ func (mine *cacheContext)CreateScene(info *SceneInfo) error {
 	db.Members = make([]string, 0, 1)
 	db.Parents = make([]string, 0, 1)
 	db.Supporter = ""
+	db.Devices = info.devices
 	err := nosql.CreateScene(db)
 	if err == nil {
 		info.initInfo(db)
@@ -116,13 +121,23 @@ func (mine *cacheContext)GetScenes(number, page uint32) (uint32,uint32,[]*SceneI
 	return total, maxPage, list.([]*SceneInfo)
 }
 
+func (mine *cacheContext)GetScenesByType(tp uint8) []*SceneInfo {
+	list := make([]*SceneInfo, 0, 10)
+	for _, scene := range mine.scenes {
+		if uint8(scene.Type) == tp {
+			list = append(list, scene)
+		}
+	}
+	return list
+}
+
 func GetAllScenes() []*SceneInfo {
 	return cacheCtx.scenes
 }
 
 func IsMasterUsed(uid string) bool {
 	for i := 0;i < len(cacheCtx.scenes);i += 1{
-		if cacheCtx.scenes[i].UID == uid {
+		if cacheCtx.scenes[i].Master == uid {
 			return true
 		}
 	}
@@ -158,6 +173,7 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.Master = db.Master
 	mine.Location = db.Location
 	mine.Entity = db.Entity
+	mine.Domain = db.Domain
 	mine.Type = SceneType(db.Type)
 	mine.Status = SceneStatus(db.Status)
 	mine.members = db.Members
@@ -170,6 +186,10 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	mine.Exhibitions = db.Displays
 	if mine.Exhibitions == nil {
 		mine.Exhibitions = make([]proxy.ShowingInfo, 0, 1)
+	}
+	mine.devices = db.Devices
+	if mine.devices == nil {
+		mine.devices = make([]proxy.DeviceInfo, 0, 1)
 	}
 
 	groups,err := nosql.GetGroupsByScene(mine.UID)
@@ -202,6 +222,9 @@ func (mine *SceneInfo)UpdateBase(name, remark, operator string) error {
 }
 
 func (mine *SceneInfo)UpdateMaster(master, operator string) error {
+	if mine.Master == master {
+		return nil
+	}
 	if IsMasterUsed(master) {
 		return errors.New("the master had used by other scene")
 	}
@@ -214,6 +237,9 @@ func (mine *SceneInfo)UpdateMaster(master, operator string) error {
 }
 
 func (mine *SceneInfo)UpdateCover(cover, operator string) error {
+	if mine.Cover == cover {
+		return nil
+	}
 	err := nosql.UpdateSceneCover(mine.UID, cover, operator)
 	if err == nil {
 		mine.Cover = cover
@@ -223,6 +249,9 @@ func (mine *SceneInfo)UpdateCover(cover, operator string) error {
 }
 
 func (mine *SceneInfo)UpdateType(operator string, tp uint8) error {
+	if uint8(mine.Type) == tp {
+		return nil
+	}
 	err := nosql.UpdateSceneType(mine.UID, operator, tp)
 	if err == nil {
 		mine.Type = SceneType(tp)
@@ -235,6 +264,15 @@ func (mine *SceneInfo)UpdateLocation(local, operator string) error {
 	err := nosql.UpdateSceneLocal(mine.UID, local, operator)
 	if err == nil {
 		mine.Location = local
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *SceneInfo)UpdateDomain(domain, operator string) error {
+	err := nosql.UpdateSceneDomain(mine.UID, operator, domain)
+	if err == nil {
+		mine.Domain = domain
 		mine.Operator = operator
 	}
 	return err
@@ -293,6 +331,14 @@ func (mine *SceneInfo)AllMembers() []string {
 	return mine.members
 }
 
+func (mine *SceneInfo)Devices() []*pb.DeviceInfo {
+	devices := make([]*pb.DeviceInfo, 0, len(mine.devices))
+	for _, device := range mine.devices {
+		devices = append(devices, &pb.DeviceInfo{Uid: device.UID, Type: uint32(device.Type), Remark: device.Remark})
+	}
+	return devices
+}
+
 func (mine *SceneInfo)AppendMember(member string) error {
 	if mine.HadMember(member){
 		return errors.New("the member had existed")
@@ -312,7 +358,11 @@ func (mine *SceneInfo)SubtractMember(member string) error {
 	if err == nil {
 		for i := 0;i < len(mine.members);i += 1 {
 			if mine.members[i] == member {
-				mine.members = append(mine.members[:i], mine.members[i+1:]...)
+				if i == len(mine.members) - 1 {
+					mine.members = append(mine.members[:i])
+				}else{
+					mine.members = append(mine.members[:i], mine.members[i+1:]...)
+				}
 				break
 			}
 		}
@@ -375,7 +425,52 @@ func (mine *SceneInfo)CancelDisplay(uid string) error {
 	if err == nil {
 		for i := 0;i < len(mine.Exhibitions);i += 1 {
 			if mine.Exhibitions[i].UID == uid {
-				mine.Exhibitions = append(mine.Exhibitions[:i], mine.Exhibitions[i+1:]...)
+				if i == len(mine.Exhibitions) - 1 {
+					mine.Exhibitions = append(mine.Exhibitions[:i])
+				}else{
+					mine.Exhibitions = append(mine.Exhibitions[:i], mine.Exhibitions[i+1:]...)
+				}
+				break
+			}
+		}
+	}
+	return err
+}
+
+func (mine *SceneInfo)HadDevice(uid string) bool {
+	for _, device := range mine.devices {
+		if device.UID == uid {
+			return true
+		}
+	}
+	return false
+}
+
+func (mine *SceneInfo)AppendDevice(device, remark string, tp uint32) error {
+	if mine.HadDevice(device){
+		return nil
+	}
+	info := proxy.DeviceInfo{UID: device, Remark: remark, Type: uint8(tp)}
+	err := nosql.AppendSceneDevice(mine.UID, &info)
+	if err == nil {
+		mine.devices = append(mine.devices, info)
+	}
+	return err
+}
+
+func (mine *SceneInfo)SubtractDevice(uid string) error {
+	if !mine.HadDevice(uid){
+		return nil
+	}
+	err := nosql.SubtractSceneDevice(mine.UID, uid)
+	if err == nil {
+		for i := 0;i < len(mine.devices);i += 1 {
+			if mine.devices[i].UID == uid {
+				if i == len(mine.devices) - 1 {
+					mine.devices = append(mine.devices[:i])
+				}else{
+					mine.devices = append(mine.devices[:i], mine.devices[i+1:]...)
+				}
 				break
 			}
 		}
@@ -449,7 +544,11 @@ func (mine *SceneInfo)RemoveGroup(uid, operator string) error {
 	if err == nil {
 		for i := 0;i < len(mine.groups);i ++ {
 			if mine.groups[i].UID == uid {
-				mine.groups = append(mine.groups[:i], mine.groups[i+1:]...)
+				if i == len(mine.groups) - 1 {
+					mine.groups = append(mine.groups[:i])
+				}else{
+					mine.groups = append(mine.groups[:i], mine.groups[i+1:]...)
+				}
 				break
 			}
 		}
