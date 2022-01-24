@@ -9,6 +9,6 @@ type ShowingInfo struct {
 
 type DeviceInfo struct {
 	Type uint8 `json:"type" bson:"type"`
-	UID string `json:"uid" bson:"uid"`
+	SN string `json:"sn" bson:"sn"`
 	Remark string `json:"remark" bson:"remark"`
 }

@@ -12,14 +12,14 @@ type baseInfo struct {
 	ID         uint64 `json:"-"`
 	UID        string `json:"uid"`
 	Name       string `json:"name"`
-	Creator string
-	Operator string
+	Creator    string
+	Operator   string
 	CreateTime time.Time
 	UpdateTime time.Time
 }
 
 type cacheContext struct {
-	scenes  []*SceneInfo
+	scenes []*SceneInfo
 }
 
 var cacheCtx *cacheContext
@@ -33,7 +33,7 @@ func InitData() error {
 		return err
 	}
 
-	scenes,err := nosql.GetAllScenes()
+	scenes, err := nosql.GetAllScenes()
 	if err == nil {
 		for _, scene := range scenes {
 			tmp := new(SceneInfo)
@@ -56,12 +56,15 @@ func checkPage(page, number uint32, all interface{}) (uint32, uint32, interface{
 	}
 	array := reflect.ValueOf(all)
 	total := uint32(array.Len())
-	maxPage := total/number
-	if total % number != 0 {
+	maxPage := total / number
+	if total%number != 0 {
 		maxPage = total/number + 1
 	}
 	if page < 1 {
 		return total, maxPage, all
+	}
+	if page > maxPage {
+		page = maxPage
 	}
 
 	var start = (page - 1) * number
@@ -73,5 +76,3 @@ func checkPage(page, number uint32, all interface{}) (uint32, uint32, interface{
 	list := array.Slice(int(start), int(end))
 	return total, maxPage, list.Interface()
 }
-
-

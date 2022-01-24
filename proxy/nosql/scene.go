@@ -21,6 +21,7 @@ type Scene struct {
 	Name        string              `json:"name" bson:"name"`
 	Type        uint8               `json:"type" bson:"type"`
 	Status      uint8               `json:"status" bson:"status"`
+	Short       string 				`json:"short" bson:"short"`
 	Cover       string              `json:"cover" bson:"cover"`
 	Master      string              `json:"master" bson:"master"`
 	Remark      string              `json:"remark" bson:"remark"`
@@ -28,9 +29,10 @@ type Scene struct {
 	Location    string              `json:"location" bson:"location"`
 	Supporter   string              `json:"supporter" bson:"supporter"`
 	Domain      string 				`json:"domain" bson:"domain"`
+	Bucket      string `json:"bucket" bson:"bucket"`
 	Address     AddressInfo         `json:"address" bson:"address"`
-	Exhibitions []string            `json:"exhibitions" bson:"exhibitions"`
-	Displays    []proxy.ShowingInfo `json:"displays" bson:"displays"`
+	//Exhibitions []string            `json:"exhibitions" bson:"exhibitions"`
+	//Displays    []proxy.ShowingInfo `json:"displays" bson:"displays"`
 	Members     []string            `json:"members" bson:"members"`
 	Parents     []string            `json:"parents" bson:"parents"`
 	Devices     []proxy.DeviceInfo `json:"devices" bson:"devices"`
@@ -142,8 +144,20 @@ func UpdateSceneDomain(uid, operator, domain string) error {
 	return err
 }
 
+func UpdateSceneShort(uid, operator, name string) error {
+	msg := bson.M{"short": name, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
 func UpdateSceneSupporter(uid, supporter, operator string) error {
 	msg := bson.M{"supporter": supporter, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
+func UpdateSceneBucket(uid, bucket, operator string) error {
+	msg := bson.M{"bucket": bucket, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }

@@ -122,6 +122,18 @@ func (mine *GroupService)GetByUser(ctx context.Context, in *pb.RequestInfo, out 
 	return nil
 }
 
+func (mine *GroupService) GetStatistic(ctx context.Context, in *pb.RequestFilter, out *pb.ReplyStatistic) error {
+	path := "group.getStatistic"
+	inLog(path, in)
+	if len(in.Key) < 1 {
+		out.Status = outError(path,"the user is empty ", pb.ResultStatus_Empty)
+		return nil
+	}
+
+	out.Status = outLog(path, out)
+	return nil
+}
+
 func (mine *GroupService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
 	path := "group.remove"
 	inLog(path, in)
