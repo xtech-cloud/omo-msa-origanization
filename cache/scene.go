@@ -124,6 +124,17 @@ func (mine *cacheContext)GetScenes(page, number uint32) (uint32,uint32,[]*SceneI
 	return total, maxPage, list.([]*SceneInfo)
 }
 
+func (mine *cacheContext)GetScenesByArray(array []string) []*SceneInfo {
+	list := make([]*SceneInfo, 0, len(array))
+	for _, s := range array {
+		info := mine.GetScene(s)
+		if info != nil {
+			list = append(list, info)
+		}
+	}
+	return list
+}
+
 func (mine *cacheContext)GetScenesByParent(parent string, page, number uint32) (uint32,uint32,[]*SceneInfo) {
 	if number < 1 {
 		number = 10

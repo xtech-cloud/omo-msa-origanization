@@ -178,6 +178,8 @@ func (mine *SceneService)GetByFilter(ctx context.Context, in *pb.RequestFilter, 
 		list = cache.Context().GetScenesByType(uint8(tp))
 	}else if in.Key == "parent" {
 		 total, max, list = cache.Context().GetScenesByParent(in.Value, in.Page, in.Number)
+	}else if in.Key == "array" {
+		list = cache.Context().GetScenesByArray(in.List)
 	}else{
 		list = make([]*cache.SceneInfo, 0 ,1)
 	}
