@@ -12,4 +12,5 @@ const (
 	TableAddress = "address"
 	TableScene = "scenes"
 	TableGroup = "scene_groups"
+	TableRoom = "scene_rooms"
 )

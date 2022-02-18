@@ -27,12 +27,14 @@ func switchScene(info *cache.SceneInfo) *pb.SceneInfo {
 	tmp.Operator = info.Operator
 	tmp.Creator = info.Creator
 	tmp.Supporter = info.Supporter
-	tmp.Domain = info.Domain
 	tmp.Bucket = info.Bucket
 	tmp.Short = info.ShortName
 	tmp.Parents = info.Parents()
 	tmp.Members = info.AllMembers()
-	tmp.Devices = info.Devices()
+	tmp.Domains = make([]*pb.ProductInfo, 0, len(info.Domains))
+	for _, domain := range info.Domains {
+		tmp.Domains = append(tmp.Domains, &pb.ProductInfo{Type: uint32(domain.Type), Uid: domain.UID, Remark: domain.Remark})
+	}
 	return tmp
 }
 
@@ -333,13 +335,10 @@ func (mine *SceneService) UpdateSupporter (ctx context.Context, in *pb.RequestFl
 	return nil
 }
 
-func (mine *SceneService) UpdateDomain (ctx context.Context, in *pb.RequestFlag, out *pb.ReplyInfo) error {
-	path := "scene.updateDomain"
+func (mine *SceneService) UpdateDomains (ctx context.Context, in *pb.ReqSceneDomains, out *pb.ReplyInfo) error {
+	path := "scene.updateDomains"
 	inLog(path, in)
-	if len(in.Flag) < 1 {
-		out.Status = outError(path,"the domain uid is empty ", pb.ResultStatus_Empty)
-		return nil
-	}
+
 	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the scene uid is empty ", pb.ResultStatus_Empty)
 		return nil
@@ -349,8 +348,11 @@ func (mine *SceneService) UpdateDomain (ctx context.Context, in *pb.RequestFlag,
 		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
 		return nil
 	}
-
-	err := info.UpdateDomain(in.Flag, in.Operator)
+	arr := make([]proxy.DomainInfo, 0, len(in.List))
+	for _, item := range in.List {
+		arr = append(arr, proxy.DomainInfo{Type: uint8(item.Type), UID: item.Uid, Remark: item.Remark})
+	}
+	err := info.UpdateDomains(in.Operator, arr)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
 		return nil
@@ -399,7 +401,7 @@ func (mine *SceneService) UpdateShortName (ctx context.Context, in *pb.RequestFl
 		return nil
 	}
 
-	err := info.UpdateDomain(in.Uid, in.Operator)
+	err := info.UpdateShortName(in.Flag, in.Operator)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
 		return nil
@@ -553,52 +555,5 @@ func (mine *SceneService) UpdateParents (ctx context.Context, in *pb.RequestList
 	out.Status = outLog(path, out)
 	return nil
 }
-
-func (mine *SceneService) AppendDevice (ctx context.Context, in *pb.ReqSceneDevice, out *pb.ReplySceneDevices) error {
-	path := "scene.appendDevice"
-	inLog(path, in)
-	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
-		return nil
-	}
-	info := cache.Context().GetScene(in.Uid)
-	if info == nil {
-		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
-		return nil
-	}
-
-	err := info.AppendDevice(in.Device, in.Remark, in.Type)
-	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
-		return nil
-	}
-	out.List = info.Devices()
-	out.Status = outLog(path, out)
-	return nil
-}
-
-func (mine *SceneService) SubtractDevice (ctx context.Context, in *pb.ReqSceneDevice, out *pb.ReplySceneDevices) error {
-	path := "scene.subtractDevice"
-	inLog(path, in)
-	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
-		return nil
-	}
-	info := cache.Context().GetScene(in.Uid)
-	if info == nil {
-		out.Status = outError(path,"the scene not found ", pb.ResultStatus_NotExisted)
-		return nil
-	}
-
-	err := info.SubtractDevice(in.Device)
-	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
-		return nil
-	}
-	out.List = info.Devices()
-	out.Status = outLog(path, out)
-	return nil
-}
-
 
 

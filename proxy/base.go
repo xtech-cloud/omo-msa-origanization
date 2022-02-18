@@ -12,3 +12,9 @@ type DeviceInfo struct {
 	SN string `json:"sn" bson:"sn"`
 	Remark string `json:"remark" bson:"remark"`
 }
+
+type DomainInfo struct {
+	Type uint8 `json:"type" bson:"type"`
+	UID string `json:"uid" bson:"uid"`
+	Remark string `json:"remark" bson:"remark"`
+}

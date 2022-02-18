@@ -28,14 +28,13 @@ type Scene struct {
 	Entity      string              `json:"entity" bson:"entity"`
 	Location    string              `json:"location" bson:"location"`
 	Supporter   string              `json:"supporter" bson:"supporter"`
-	Domain      string 				`json:"domain" bson:"domain"`
 	Bucket      string `json:"bucket" bson:"bucket"`
 	Address     AddressInfo         `json:"address" bson:"address"`
 	//Exhibitions []string            `json:"exhibitions" bson:"exhibitions"`
 	//Displays    []proxy.ShowingInfo `json:"displays" bson:"displays"`
 	Members     []string            `json:"members" bson:"members"`
 	Parents     []string            `json:"parents" bson:"parents"`
-	Devices     []proxy.DeviceInfo `json:"devices" bson:"devices"`
+	Domains     []proxy.DomainInfo 	`json:"domains" bson:"domains"`
 }
 
 func CreateScene(info *Scene) error {
@@ -138,8 +137,8 @@ func UpdateSceneStatus(uid string, status uint8, operator string) error {
 	return err
 }
 
-func UpdateSceneDomain(uid, operator, domain string) error {
-	msg := bson.M{"domain": domain, "operator": operator, "updatedAt": time.Now()}
+func UpdateSceneDomains(uid, operator string, domains []proxy.DomainInfo) error {
+	msg := bson.M{"domains": domains, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }
@@ -215,20 +214,3 @@ func SubtractSceneDisplay(uid, display string) error {
 	return err
 }
 
-func AppendSceneDevice(uid string, device *proxy.DeviceInfo) error {
-	if len(uid) < 1 {
-		return errors.New("the uid is empty")
-	}
-	msg := bson.M{"devices": device}
-	_, err := appendElement(TableScene, uid, msg)
-	return err
-}
-
-func SubtractSceneDevice(uid, device string) error {
-	if len(uid) < 1 {
-		return errors.New("the uid is empty")
-	}
-	msg := bson.M{"devices": bson.M{"uid": device}}
-	_, err := removeElement(TableScene, uid, msg)
-	return err
-}
