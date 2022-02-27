@@ -126,7 +126,7 @@ func AppendRoomDevice(uid string, device *proxy.DeviceInfo) error {
 		return errors.New("the uid is empty")
 	}
 	msg := bson.M{"devices": device}
-	_, err := appendElement(TableScene, uid, msg)
+	_, err := appendElement(TableRoom, uid, msg)
 	return err
 }
 
@@ -135,6 +135,6 @@ func SubtractRoomDevice(uid, device string) error {
 		return errors.New("the uid is empty")
 	}
 	msg := bson.M{"devices": bson.M{"uid": device}}
-	_, err := removeElement(TableScene, uid, msg)
+	_, err := removeElement(TableRoom, uid, msg)
 	return err
 }

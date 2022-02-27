@@ -17,6 +17,7 @@ func switchRoom(info *cache.RoomInfo) *pb.RoomInfo {
 	tmp.Created = info.CreateTime.Unix()
 	tmp.Updated = info.UpdateTime.Unix()
 	tmp.Name = info.Name
+	tmp.Owner = info.Scene
 	tmp.Remark = info.Remark
 	tmp.Quotes = info.Quotes
 	tmp.Devices = info.Devices()
@@ -24,7 +25,7 @@ func switchRoom(info *cache.RoomInfo) *pb.RoomInfo {
 }
 
 func (mine *RoomService)AddOne(ctx context.Context, in *pb.ReqRoomAdd, out *pb.ReplyRoomInfo) error {
-	path := "Room.add"
+	path := "room.add"
 	inLog(path, in)
 	if len(in.Name) < 1 {
 		out.Status = outError(path,"the name is empty ", pb.ResultStatus_Empty)
@@ -52,7 +53,7 @@ func (mine *RoomService)AddOne(ctx context.Context, in *pb.ReqRoomAdd, out *pb.R
 }
 
 func (mine *RoomService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyRoomInfo) error {
-	path := "Room.getOne"
+	path := "room.getOne"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
@@ -80,7 +81,7 @@ func (mine *RoomService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb.
 }
 
 func (mine *RoomService) GetStatistic(ctx context.Context, in *pb.RequestFilter, out *pb.ReplyStatistic) error {
-	path := "Room.getStatistic"
+	path := "room.getStatistic"
 	inLog(path, in)
 	if len(in.Key) < 1 {
 		out.Status = outError(path,"the user is empty ", pb.ResultStatus_Empty)
@@ -92,7 +93,7 @@ func (mine *RoomService) GetStatistic(ctx context.Context, in *pb.RequestFilter,
 }
 
 func (mine *RoomService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
-	path := "Room.remove"
+	path := "room.remove"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
@@ -109,28 +110,39 @@ func (mine *RoomService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *
 }
 
 func (mine *RoomService)GetList(ctx context.Context, in *pb.RequestFilter, out *pb.ReplyRoomList) error {
-	path := "Room.getList"
+	path := "room.getList"
 	inLog(path, in)
-	scene := cache.Context().GetScene(in.Parent)
-	if scene == nil {
-		out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
-		return nil
-	}
 	var list []*cache.RoomInfo
-	if in.Key == "" {
-		list = scene.GetRooms()
-	}else if in.Key == "product" {
-		tp,er := strconv.ParseUint(in.Value, 10, 32)
-		if er != nil {
-			out.Status = outError(path,er.Error(), pb.ResultStatus_DBException)
+	if in.Parent == "" {
+		if in.Key == "device" {
+			list = cache.Context().GetRoomsByDevice(in.Value)
+		}else{
+			list = make([]*cache.RoomInfo, 0, 1)
+		}
+	}else{
+		scene := cache.Context().GetScene(in.Parent)
+		if scene == nil {
+			out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
 			return nil
 		}
-		list = scene.GetRoomsByType(uint8(tp))
-	}else if in.Key == "quote" {
-		list = scene.GetRoomsByQuote(in.Value)
-	}else{
-		list = make([]*cache.RoomInfo, 0, 1)
+		if in.Key == "" {
+			list = scene.GetRooms()
+		}else if in.Key == "product" {
+			tp,er := strconv.ParseUint(in.Value, 10, 32)
+			if er != nil {
+				out.Status = outError(path,er.Error(), pb.ResultStatus_DBException)
+				return nil
+			}
+			list = scene.GetRoomsByType(uint8(tp))
+		}else if in.Key == "quote" {
+			list = scene.GetRoomsByQuote(in.Value)
+		}else if in.Key == "device" {
+			list = scene.GetRoomsByDevice(in.Value)
+		}else{
+			list = make([]*cache.RoomInfo, 0, 1)
+		}
 	}
+
 
 	out.List = make([]*pb.RoomInfo, 0, len(list))
 	for _, value := range list {
@@ -141,7 +153,7 @@ func (mine *RoomService)GetList(ctx context.Context, in *pb.RequestFilter, out *
 }
 
 func (mine *RoomService) UpdateBase (ctx context.Context, in *pb.ReqRoomUpdate, out *pb.ReplyInfo) error {
-	path := "Room.updateBase"
+	path := "room.updateBase"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
@@ -176,7 +188,7 @@ func (mine *RoomService) UpdateBase (ctx context.Context, in *pb.ReqRoomUpdate, 
 }
 
 func (mine *RoomService) UpdateQuotes (ctx context.Context, in *pb.ReqRoomQuotes, out *pb.ReplyRoomInfo) error {
-	path := "Room.updateQuotes"
+	path := "room.updateQuotes"
 	inLog(path, in)
 	if len(in.Scene) < 1 || len(in.Room) < 1 {
 		out.Status = outError(path,"the scene or room is empty ", pb.ResultStatus_Empty)
@@ -198,7 +210,7 @@ func (mine *RoomService) UpdateQuotes (ctx context.Context, in *pb.ReqRoomQuotes
 }
 
 func (mine *RoomService) AppendDevice (ctx context.Context, in *pb.ReqRoomDevice, out *pb.ReplyRoomDevices) error {
-	path := "scene.appendDevice"
+	path := "room.appendDevice"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
@@ -221,7 +233,7 @@ func (mine *RoomService) AppendDevice (ctx context.Context, in *pb.ReqRoomDevice
 }
 
 func (mine *RoomService) SubtractDevice (ctx context.Context, in *pb.ReqRoomDevice, out *pb.ReplyRoomDevices) error {
-	path := "scene.subtractDevice"
+	path := "room.subtractDevice"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
 		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)

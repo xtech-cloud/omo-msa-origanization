@@ -24,6 +24,17 @@ func (mine *cacheContext)GetRoom(uid string) *RoomInfo {
 	return nil
 }
 
+func (mine *cacheContext)GetRoomsByDevice(sn string) []*RoomInfo {
+	list := make([]*RoomInfo, 0, 10)
+	for _, scene := range mine.scenes {
+		arr := scene.GetRoomsByDevice(sn)
+		if  arr != nil && len(arr) > 0 {
+			list = append(list, arr...)
+		}
+	}
+	return list
+}
+
 func (mine *cacheContext)GetRoomBy(scene, uid string) *RoomInfo {
 	for _, item := range mine.scenes {
 		if item.UID == scene {
@@ -101,9 +112,9 @@ func (mine *RoomInfo)HadQuote(quote string) bool {
 	return false
 }
 
-func (mine *RoomInfo)HadDevice(uid string) bool {
+func (mine *RoomInfo)HadDevice(sn string) bool {
 	for _, device := range mine.devices {
-		if device.SN == uid {
+		if device.SN == sn {
 			return true
 		}
 	}

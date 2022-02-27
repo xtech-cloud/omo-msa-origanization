@@ -684,6 +684,17 @@ func (mine *SceneInfo)GetRoomsByQuote(quote string) []*RoomInfo {
 	return list
 }
 
+func (mine *SceneInfo)GetRoomsByDevice(sn string) []*RoomInfo {
+	mine.initRooms()
+	list := make([]*RoomInfo, 0, len(mine.rooms))
+	for _, item := range mine.rooms {
+		if item.HadDevice(sn) {
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
 func (mine *SceneInfo)RemoveRoom(uid, operator string) error {
 	if !mine.HadRoom(uid) {
 		return nil
