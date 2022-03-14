@@ -42,7 +42,6 @@ type SceneInfo struct {
 	Address nosql.AddressInfo
 	members []string
 	parents []string
-	//Exhibitions []proxy.ShowingInfo
 	groups []*GroupInfo
 	rooms  []*RoomInfo
 	Domains []proxy.DomainInfo
@@ -441,61 +440,6 @@ func (mine *SceneInfo) UpdateParents(operator string, list []string) error {
 	return err
 }
 
-//func (mine *SceneInfo)UpdateDisplay(uid, effect, skin, operator string, slots []string) error {
-//	//if !mine.HadExhibition(uid){
-//	//	return nil
-//	//}
-//	//array := make([]proxy.ShowingInfo, 0, len(mine.Exhibitions))
-//	//for _, info := range mine.Exhibitions {
-//	//	if info.UID == uid {
-//	//		info.Effect = effect
-//	//		info.Skin = skin
-//	//		info.Slots = slots
-//	//	}
-//	//	array = append(array, info)
-//	//}
-//	//err := nosql.UpdateSceneDisplay(mine.UID, operator, array)
-//	//if err == nil {
-//	//	mine.Exhibitions = array
-//	//}
-//	//return err
-//	return nil
-//}
-
-//func (mine *SceneInfo)PutOnDisplay(uid string) error {
-//	if mine.HadExhibition(uid){
-//		return nil
-//	}
-//	info := proxy.ShowingInfo{UID: uid, Effect: ""}
-//	err := nosql.AppendSceneDisplay(mine.UID, &info)
-//	if err == nil {
-//		mine.Exhibitions = append(mine.Exhibitions, info)
-//	}
-//	return err
-//	return nil
-//}
-
-//func (mine *SceneInfo)CancelDisplay(uid string) error {
-//	if !mine.HadExhibition(uid){
-//		return nil
-//	}
-//	err := nosql.SubtractSceneDisplay(mine.UID, uid)
-//	if err == nil {
-//		for i := 0;i < len(mine.Exhibitions);i += 1 {
-//			if mine.Exhibitions[i].UID == uid {
-//				if i == len(mine.Exhibitions) - 1 {
-//					mine.Exhibitions = append(mine.Exhibitions[:i])
-//				}else{
-//					mine.Exhibitions = append(mine.Exhibitions[:i], mine.Exhibitions[i+1:]...)
-//				}
-//				break
-//			}
-//		}
-//	}
-//	return err
-//	return nil
-//}
-
 func (mine *SceneInfo)HadParent(uid string) bool {
 	if mine.parents == nil {
 		return false
@@ -616,7 +560,7 @@ func (mine *SceneInfo)CreateRoom(info *pb.ReqRoomAdd) (*RoomInfo, error) {
 	db.Remark = info.Remark
 	db.Scene = info.Owner
 	db.Quotes = make([]string, 0, 1)
-	db.Devices = make([]proxy.DeviceInfo, 0, 1)
+	db.Devices = make([]*proxy.DeviceInfo, 0, 1)
 	err := nosql.CreateRoom(db)
 	if err == nil {
 		tmp := new(RoomInfo)
@@ -629,7 +573,7 @@ func (mine *SceneInfo)CreateRoom(info *pb.ReqRoomAdd) (*RoomInfo, error) {
 
 func (mine *SceneInfo)HadRoom(uid string) bool {
 	mine.initRooms()
-	for _, item := range mine.groups {
+	for _, item := range mine.rooms {
 		if item.UID == uid {
 			return true
 		}
@@ -715,3 +659,12 @@ func (mine *SceneInfo)RemoveRoom(uid, operator string) error {
 	return err
 }
 
+func (mine *SceneInfo) ClearQuotes(operator string, list []string) {
+	mine.initRooms()
+	for _, room := range mine.rooms {
+		if room.HadQuotes(list) {
+			_ = room.UpdateQuotes(operator, make([]string, 0, 1))
+			break
+		}
+	}
+}

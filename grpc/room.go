@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
+	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.organization/cache"
 	"strconv"
 )
@@ -28,23 +29,23 @@ func (mine *RoomService)AddOne(ctx context.Context, in *pb.ReqRoomAdd, out *pb.R
 	path := "room.add"
 	inLog(path, in)
 	if len(in.Name) < 1 {
-		out.Status = outError(path,"the name is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the name is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	scene := cache.Context().GetScene(in.Owner)
 	if scene == nil {
-		out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
 	if scene.HadRoomByName(in.Name) {
-		out.Status = outError(path,"the name repeated ", pb.ResultStatus_Repeated)
+		out.Status = outError(path,"the name repeated ", pbstatus.ResultStatus_Repeated)
 		return nil
 	}
 
 	Room, err := scene.CreateRoom(in)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Info = switchRoom(Room)
@@ -56,14 +57,14 @@ func (mine *RoomService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb.
 	path := "room.getOne"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	var info *cache.RoomInfo
 	if len(in.Parent) > 0 {
 		scene := cache.Context().GetScene(in.Parent)
 		if scene == nil {
-			out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
+			out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_NotExisted)
 			return nil
 		}
 		info = scene.GetRoom(in.Uid)
@@ -72,7 +73,7 @@ func (mine *RoomService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb.
 	}
 
 	if info == nil {
-		out.Status = outError(path,"the room not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the room not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	out.Info = switchRoom(info)
@@ -84,7 +85,7 @@ func (mine *RoomService) GetStatistic(ctx context.Context, in *pb.RequestFilter,
 	path := "room.getStatistic"
 	inLog(path, in)
 	if len(in.Key) < 1 {
-		out.Status = outError(path,"the user is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the user is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 
@@ -96,12 +97,12 @@ func (mine *RoomService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *
 	path := "room.remove"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	err := cache.Context().RemoveRoom(in.Uid, in.Operator)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Uid = in.Uid
@@ -116,13 +117,15 @@ func (mine *RoomService)GetList(ctx context.Context, in *pb.RequestFilter, out *
 	if in.Parent == "" {
 		if in.Key == "device" {
 			list = cache.Context().GetRoomsByDevice(in.Value)
+		}else if in.Key == "quote" {
+			list = cache.Context().GetRoomsByQuote(in.Value)
 		}else{
 			list = make([]*cache.RoomInfo, 0, 1)
 		}
 	}else{
 		scene := cache.Context().GetScene(in.Parent)
 		if scene == nil {
-			out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
+			out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_NotExisted)
 			return nil
 		}
 		if in.Key == "" {
@@ -130,7 +133,7 @@ func (mine *RoomService)GetList(ctx context.Context, in *pb.RequestFilter, out *
 		}else if in.Key == "product" {
 			tp,er := strconv.ParseUint(in.Value, 10, 32)
 			if er != nil {
-				out.Status = outError(path,er.Error(), pb.ResultStatus_DBException)
+				out.Status = outError(path,er.Error(), pbstatus.ResultStatus_DBException)
 				return nil
 			}
 			list = scene.GetRoomsByType(uint8(tp))
@@ -156,12 +159,12 @@ func (mine *RoomService) UpdateBase (ctx context.Context, in *pb.ReqRoomUpdate, 
 	path := "room.updateBase"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetRoom(in.Uid)
 	if info == nil {
-		out.Status = outError(path,"the room not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the room not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	var err error
@@ -169,17 +172,17 @@ func (mine *RoomService) UpdateBase (ctx context.Context, in *pb.ReqRoomUpdate, 
 	if len(in.Name) > 0 || len(in.Remark) > 0 {
 		scene := cache.Context().GetScene(info.Scene)
 		if scene == nil {
-			out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
+			out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_NotExisted)
 			return nil
 		}
 		if in.Name != info.Name && scene.HadRoomByName(in.Name) {
-			out.Status = outError(path,"the room name repeated ", pb.ResultStatus_Repeated)
+			out.Status = outError(path,"the room name repeated ", pbstatus.ResultStatus_Repeated)
 			return nil
 		}
 		err = info.UpdateBase(in.Name, in.Remark, in.Operator)
 	}
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 
@@ -191,17 +194,23 @@ func (mine *RoomService) UpdateQuotes (ctx context.Context, in *pb.ReqRoomQuotes
 	path := "room.updateQuotes"
 	inLog(path, in)
 	if len(in.Scene) < 1 || len(in.Room) < 1 {
-		out.Status = outError(path,"the scene or room is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the scene or room is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
-	info := cache.Context().GetRoomBy(in.Scene, in.Room)
+	scene := cache.Context().GetScene(in.Scene)
+	if scene == nil {
+		out.Status = outError(path,"the scene not found ", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	info := scene.GetRoom(in.Room)
 	if info == nil {
-		out.Status = outError(path,"the room not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the room not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	scene.ClearQuotes(in.Operator, in.List)
 	err := info.UpdateQuotes(in.Operator, in.List)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 
@@ -213,18 +222,22 @@ func (mine *RoomService) AppendDevice (ctx context.Context, in *pb.ReqRoomDevice
 	path := "room.appendDevice"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
+		return nil
+	}
+	if cache.Context().HadBindDeviceInRoom(in.Device) {
+		out.Status = outError(path,"the device had bind by other room", pbstatus.ResultStatus_Repeated)
 		return nil
 	}
 	info := cache.Context().GetRoom(in.Uid)
 	if info == nil {
-		out.Status = outError(path,"the room not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the room not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
 	err := info.AppendDevice(in.Device, in.Remark, in.Type)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.List = info.Devices()
@@ -236,18 +249,18 @@ func (mine *RoomService) SubtractDevice (ctx context.Context, in *pb.ReqRoomDevi
 	path := "room.subtractDevice"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetRoom(in.Uid)
 	if info == nil {
-		out.Status = outError(path,"the room not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the room not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
 	err := info.SubtractDevice(in.Device)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.List = info.Devices()

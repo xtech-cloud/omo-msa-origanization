@@ -22,7 +22,7 @@ type Room struct {
 	Scene    string `json:"scene" bson:"scene"`
 	Remark   string `json:"remark" bson:"remark"`
 	Quotes   []string `json:"quotes" bson::"quotes"`
-	Devices     []proxy.DeviceInfo `json:"devices" bson:"devices"`
+	Devices  []*proxy.DeviceInfo `json:"devices" bson:"devices"`
 }
 
 func CreateRoom(info *Room) error {
@@ -134,7 +134,7 @@ func SubtractRoomDevice(uid, device string) error {
 	if len(uid) < 1 {
 		return errors.New("the uid is empty")
 	}
-	msg := bson.M{"devices": bson.M{"uid": device}}
+	msg := bson.M{"devices": bson.M{"sn": device}}
 	_, err := removeElement(TableRoom, uid, msg)
 	return err
 }

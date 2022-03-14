@@ -4,6 +4,8 @@ import (
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"omo.msa.organization/proxy"
 	"omo.msa.organization/proxy/nosql"
+	"omo.msa.organization/tool"
+	"time"
 )
 
 type RoomInfo struct {
@@ -11,7 +13,7 @@ type RoomInfo struct {
 	Remark string
 	Scene string
 	Quotes []string
-	devices []proxy.DeviceInfo
+	devices []*proxy.DeviceInfo
 }
 
 func (mine *cacheContext)GetRoom(uid string) *RoomInfo {
@@ -33,6 +35,27 @@ func (mine *cacheContext)GetRoomsByDevice(sn string) []*RoomInfo {
 		}
 	}
 	return list
+}
+
+func (mine *cacheContext)GetRoomsByQuote(quote string) []*RoomInfo {
+	list := make([]*RoomInfo, 0, 10)
+	for _, scene := range mine.scenes {
+		arr := scene.GetRoomsByQuote(quote)
+		if  arr != nil && len(arr) > 0 {
+			list = append(list, arr...)
+		}
+	}
+	return list
+}
+
+func (mine *cacheContext)HadBindDeviceInRoom(sn string) bool {
+	for _, scene := range mine.scenes {
+		arr := scene.GetRoomsByDevice(sn)
+		if  arr != nil && len(arr) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (mine *cacheContext)GetRoomBy(scene, uid string) *RoomInfo {
@@ -69,7 +92,7 @@ func (mine *RoomInfo)initInfo(db *nosql.Room)  {
 	}
 	mine.devices = db.Devices
 	if mine.devices == nil {
-		mine.devices = make([]proxy.DeviceInfo, 0, 1)
+		mine.devices = make([]*proxy.DeviceInfo, 0, 1)
 	}
 
 }
@@ -112,6 +135,15 @@ func (mine *RoomInfo)HadQuote(quote string) bool {
 	return false
 }
 
+func (mine *RoomInfo)HadQuotes(quotes []string) bool {
+	for i := 0;i < len(mine.Quotes);i += 1 {
+		if tool.HasItem(quotes, mine.Quotes[i]) {
+			return true
+		}
+	}
+	return false
+}
+
 func (mine *RoomInfo)HadDevice(sn string) bool {
 	for _, device := range mine.devices {
 		if device.SN == sn {
@@ -142,8 +174,8 @@ func (mine *RoomInfo)AppendDevice(device, remark string, tp uint32) error {
 	if mine.HadDevice(device){
 		return nil
 	}
-	info := proxy.DeviceInfo{SN: device, Remark: remark, Type: uint8(tp)}
-	err := nosql.AppendRoomDevice(mine.UID, &info)
+	info := &proxy.DeviceInfo{SN: device, Remark: remark, Type: uint8(tp), Updated: time.Now()}
+	err := nosql.AppendRoomDevice(mine.UID, info)
 	if err == nil {
 		mine.devices = append(mine.devices, info)
 	}

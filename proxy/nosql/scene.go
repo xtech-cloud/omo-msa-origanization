@@ -190,27 +190,27 @@ func SubtractSceneMember(uid, member string) error {
 	return err
 }
 
-func UpdateSceneDisplay(uid, operator string, list []proxy.ShowingInfo) error {
-	msg := bson.M{"displays": list, "operator": operator, "updatedAt": time.Now()}
-	_, err := updateOne(TableScene, uid, msg)
-	return err
-}
-
-func AppendSceneDisplay(uid string, display *proxy.ShowingInfo) error {
-	if len(uid) < 1 {
-		return errors.New("the uid is empty")
-	}
-	msg := bson.M{"displays": display}
-	_, err := appendElement(TableScene, uid, msg)
-	return err
-}
-
-func SubtractSceneDisplay(uid, display string) error {
-	if len(uid) < 1 {
-		return errors.New("the uid is empty")
-	}
-	msg := bson.M{"displays": bson.M{"uid": display}}
-	_, err := removeElement(TableScene, uid, msg)
-	return err
-}
+//func UpdateSceneDisplay(uid, operator string, list []proxy.ShowingInfo) error {
+//	msg := bson.M{"displays": list, "operator": operator, "updatedAt": time.Now()}
+//	_, err := updateOne(TableScene, uid, msg)
+//	return err
+//}
+//
+//func AppendSceneDisplay(uid string, display *proxy.ShowingInfo) error {
+//	if len(uid) < 1 {
+//		return errors.New("the uid is empty")
+//	}
+//	msg := bson.M{"displays": display}
+//	_, err := appendElement(TableScene, uid, msg)
+//	return err
+//}
+//
+//func SubtractSceneDisplay(uid, display string) error {
+//	if len(uid) < 1 {
+//		return errors.New("the uid is empty")
+//	}
+//	msg := bson.M{"displays": bson.M{"uid": display}}
+//	_, err := removeElement(TableScene, uid, msg)
+//	return err
+//}
 

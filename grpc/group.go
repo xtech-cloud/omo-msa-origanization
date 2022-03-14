@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
+	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.organization/cache"
 )
 
@@ -38,23 +39,23 @@ func (mine *GroupService)AddOne(ctx context.Context, in *pb.ReqGroupAdd, out *pb
 	path := "group.add"
 	inLog(path, in)
 	if len(in.Name) < 1 {
-		out.Status = outError(path,"the name is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the name is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	scene := cache.Context().GetScene(in.Scene)
 	if scene == nil {
-		out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
 	if scene.HadGroupByName(in.Name) {
-		out.Status = outError(path,"not found the scene ", pb.ResultStatus_Repeated)
+		out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_Repeated)
 		return nil
 	}
 
 	group, err := scene.CreateGroup(in)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Info = switchGroup(group)
@@ -66,14 +67,14 @@ func (mine *GroupService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 	path := "group.getOne"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	var info *cache.GroupInfo
 	if len(in.Parent) > 0 {
 		scene := cache.Context().GetScene(in.Parent)
 		if scene == nil {
-			out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
+			out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_NotExisted)
 			return nil
 		}
 		info = scene.GetGroup(in.Uid)
@@ -82,7 +83,7 @@ func (mine *GroupService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 	}
 
 	if info == nil {
-		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the group not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	out.Info = switchGroup(info)
@@ -94,7 +95,7 @@ func (mine *GroupService)GetByContact(ctx context.Context, in *pb.RequestInfo, o
 	path := "group.getByContact"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the phone is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the phone is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	list := cache.Context().GetGroupByContact(in.Uid)
@@ -110,7 +111,7 @@ func (mine *GroupService)GetByUser(ctx context.Context, in *pb.RequestInfo, out 
 	path := "group.getByUser"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the user is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the user is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	list := cache.Context().GetGroupByMember(in.Uid)
@@ -126,7 +127,7 @@ func (mine *GroupService) GetStatistic(ctx context.Context, in *pb.RequestFilter
 	path := "group.getStatistic"
 	inLog(path, in)
 	if len(in.Key) < 1 {
-		out.Status = outError(path,"the user is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the user is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 
@@ -138,12 +139,12 @@ func (mine *GroupService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out 
 	path := "group.remove"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	err := cache.Context().RemoveGroup(in.Uid, in.Operator)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Uid = in.Uid
@@ -156,7 +157,7 @@ func (mine *GroupService)GetList(ctx context.Context, in *pb.RequestPage, out *p
 	inLog(path, in)
 	scene := cache.Context().GetScene(in.Parent)
 	if scene == nil {
-		out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	total,max,list := scene.GetGroups(in.Number, in.Page)
@@ -175,12 +176,12 @@ func (mine *GroupService) UpdateBase (ctx context.Context, in *pb.ReqGroupUpdate
 	path := "group.updateBase"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetGroup(in.Uid)
 	if info == nil {
-		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the group not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	var err error
@@ -191,17 +192,17 @@ func (mine *GroupService) UpdateBase (ctx context.Context, in *pb.ReqGroupUpdate
 	if len(in.Name) > 0 || len(in.Remark) > 0 {
 		scene := cache.Context().GetScene(info.Scene)
 		if scene == nil {
-			out.Status = outError(path,"not found the scene ", pb.ResultStatus_NotExisted)
+			out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_NotExisted)
 			return nil
 		}
 		if in.Name != info.Name && scene.HadGroupByName(in.Name) {
-			out.Status = outError(path,"the department name repeated ", pb.ResultStatus_Repeated)
+			out.Status = outError(path,"the department name repeated ", pbstatus.ResultStatus_Repeated)
 			return nil
 		}
 		err = info.UpdateBase(in.Name, in.Remark, in.Operator)
 	}
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 
@@ -213,25 +214,25 @@ func (mine *GroupService) UpdateAddress (ctx context.Context, in *pb.RequestAddr
 	path := "group.updateAddress"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetGroup(in.Uid)
 	if info == nil {
-		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the group not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	var err error
 	if in.Location != info.Location {
 		err = info.UpdateLocation(in.Location, in.Operator)
 		if err != nil {
-			out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+			out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 			return nil
 		}
 	}
 	err = info.UpdateAddress(in.Country, in.Province, in.City, in.Zone, in.Operator)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Info = switchGroup(info)
@@ -243,17 +244,17 @@ func (mine *GroupService) UpdateLocation (ctx context.Context, in *pb.RequestFla
 	path := "group.updateLocation"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetGroup(in.Uid)
 	if info == nil {
-		out.Status = outError(path,"the Group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the Group not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	err := info.UpdateLocation(in.Flag, in.Operator)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 
@@ -265,17 +266,17 @@ func (mine *GroupService) UpdateContact (ctx context.Context, in *pb.RequestFlag
 	path := "group.updateContact"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetGroup(in.Uid)
 	if info == nil {
-		out.Status = outError(path,"the Group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the Group not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	err := info.UpdateContact(in.Flag, in.Operator)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 
@@ -287,17 +288,17 @@ func (mine *GroupService) UpdateMaster (ctx context.Context, in *pb.RequestFlag,
 	path := "group.updateMaster"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetGroup(in.Uid)
 	if info == nil {
-		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the group not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	err := info.UpdateMaster(in.Flag, in.Operator)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Status = outLog(path, out)
@@ -308,17 +309,17 @@ func (mine *GroupService) UpdateAssistant (ctx context.Context, in *pb.RequestFl
 	path := "group.updateAssistant"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetGroup(in.Uid)
 	if info == nil {
-		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the group not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	err := info.UpdateMaster(in.Flag, in.Operator)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Status = outLog(path, out)
@@ -329,18 +330,18 @@ func (mine *GroupService) AppendMember (ctx context.Context, in *pb.RequestInfo,
 	path := "group.appendMember"
 	inLog(path, in)
 	if len(in.Parent) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetGroup(in.Parent)
 	if info == nil {
-		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the group not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
 	err := info.AppendMember(in.Uid)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Uid = in.Uid
@@ -353,18 +354,18 @@ func (mine *GroupService) SubtractMember (ctx context.Context, in *pb.RequestInf
 	path := "group.subtractMember"
 	inLog(path, in)
 	if len(in.Parent) < 1 {
-		out.Status = outError(path,"the uid is empty ", pb.ResultStatus_Empty)
+		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
 	info := cache.Context().GetGroup(in.Parent)
 	if info == nil {
-		out.Status = outError(path,"the group not found ", pb.ResultStatus_NotExisted)
+		out.Status = outError(path,"the group not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
 	err := info.SubtractMember(in.Uid)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pb.ResultStatus_DBException)
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Uid = in.Uid
