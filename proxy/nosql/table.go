@@ -13,4 +13,5 @@ const (
 	TableScene = "scenes"
 	TableGroup = "scene_groups"
 	TableRoom = "scene_rooms"
+	TableDevice = "devices"
 )

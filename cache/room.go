@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"omo.msa.organization/proxy"
 	"omo.msa.organization/proxy/nosql"
@@ -13,7 +14,7 @@ type RoomInfo struct {
 	Remark string
 	Scene string
 	Quotes []string
-	devices []*proxy.DeviceInfo
+	displays []*proxy.DisplayInfo
 }
 
 func (mine *cacheContext)GetRoom(uid string) *RoomInfo {
@@ -90,11 +91,11 @@ func (mine *RoomInfo)initInfo(db *nosql.Room)  {
 	if mine.Quotes == nil {
 		mine.Quotes = make([]string, 0, 1)
 	}
-	mine.devices = db.Devices
-	if mine.devices == nil {
-		mine.devices = make([]*proxy.DeviceInfo, 0, 1)
-	}
 
+	mine.displays = make([]*proxy.DisplayInfo, 0, len(db.Displays))
+	for _, display := range db.Displays {
+		mine.displays = append(mine.displays, display.Clone())
+	}
 }
 
 func (mine *RoomInfo)UpdateBase(name, remark, operator string) error {
@@ -111,6 +112,17 @@ func (mine *RoomInfo)UpdateBase(name, remark, operator string) error {
 		mine.Operator = operator
 	}
 	return err
+}
+
+func (mine *RoomInfo)Devices() []*DeviceInfo {
+	dbs,_ := nosql.GetDevicesByRoom(mine.Scene, mine.UID)
+	devices := make([]*DeviceInfo, 0, 5)
+	for _, device := range dbs {
+		tmp := new(DeviceInfo)
+		tmp.initInfo(device)
+		devices = append(devices, tmp)
+	}
+	return devices
 }
 
 func (mine *RoomInfo)UpdateQuotes(operator string, list []string) error {
@@ -144,8 +156,42 @@ func (mine *RoomInfo)HadQuotes(quotes []string) bool {
 	return false
 }
 
+func (mine *RoomInfo)UpdateDisplays(sn, group, operator string, showing bool, displays []string) error {
+	device := mine.GetDevice(sn)
+	if device == nil {
+		return errors.New("the device had not found by sn")
+	}
+	if displays == nil {
+		displays = make([]string, 0, 1)
+	}
+	if showing {
+		return device.UpdateShowings(operator, displays)
+	}else{
+		tempArr := make([]*proxy.DisplayInfo, 0, len(mine.displays))
+		tempArr = append(tempArr, mine.displays...)
+		had := false
+		for _, item := range tempArr {
+			if item.Type == device.Type && item.Group == group {
+				had = true
+				item.Showings = displays
+				item.Updated = time.Now()
+				break
+			}
+		}
+		if !had {
+			tempArr = append(tempArr, &proxy.DisplayInfo{Group: group, Type: device.Type, Showings: make([]string, 0, 1), Updated: time.Now()})
+		}
+		err := nosql.UpdateRoomDisplays(mine.UID, operator, tempArr)
+		if err == nil {
+			mine.displays = tempArr
+		}
+		return err
+	}
+}
+
 func (mine *RoomInfo)HadDevice(sn string) bool {
-	for _, device := range mine.devices {
+	devices := mine.Devices()
+	for _, device := range devices {
 		if device.SN == sn {
 			return true
 		}
@@ -154,50 +200,66 @@ func (mine *RoomInfo)HadDevice(sn string) bool {
 }
 
 func (mine *RoomInfo)HadDeviceByType(tp uint8) bool {
-	for _, device := range mine.devices {
-		if device.Type == tp {
+	devices := mine.Devices()
+	for _, device := range devices {
+		if device.Type == uint32(tp) {
 			return true
 		}
 	}
 	return false
 }
 
-func (mine *RoomInfo)Devices() []*pb.ProductInfo {
-	devices := make([]*pb.ProductInfo, 0, len(mine.devices))
-	for _, device := range mine.devices {
-		devices = append(devices, &pb.ProductInfo{Uid: device.SN, Type: uint32(device.Type), Remark: device.Remark})
+func (mine *RoomInfo)Products() []*pb.ProductInfo {
+	devices := mine.Devices()
+	list := make([]*pb.ProductInfo, 0, len(devices))
+	for _, device := range devices {
+		tmp := &pb.ProductInfo{Uid: device.SN, Type: device.Type, Remark: device.Remark}
+		tmp.Displays = mine.switchDisplays(device.Type, device.displays)
+		list = append(list, tmp)
 	}
-	return devices
+	return list
 }
 
-func (mine *RoomInfo)AppendDevice(device, remark string, tp uint32) error {
+func (mine *RoomInfo)switchDisplays(tp uint32, arr []string) []*pb.DisplayInfo {
+	list := make([]*pb.DisplayInfo, 0, 10)
+	prepares := mine.GetPrepareDisplays(tp)
+	for _, prepare := range prepares {
+		tmp := new(pb.DisplayInfo)
+		tmp.Group = prepare.Group
+		tmp.Prepares = prepare.Showings
+		tmp.Showings = arr
+		list = append(list, tmp)
+	}
+	return list
+}
+
+func (mine *RoomInfo)GetDevice(sn string) *DeviceInfo {
+	devices := mine.Devices()
+	for _, device := range devices {
+		if device.SN == sn {
+			return device
+		}
+	}
+	return nil
+}
+
+func (mine *RoomInfo)GetPrepareDisplays(tp uint32) []*proxy.DisplayInfo {
+	list := make([]*proxy.DisplayInfo, 0, 3)
+	for _, item := range mine.displays {
+		if item.Type == tp {
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func (mine *RoomInfo)AppendDevice(device, remark, operator string, tp uint32) error {
 	if mine.HadDevice(device){
 		return nil
 	}
-	info := &proxy.DeviceInfo{SN: device, Remark: remark, Type: uint8(tp), Updated: time.Now()}
-	err := nosql.AppendRoomDevice(mine.UID, info)
+	info,err := cacheCtx.checkDevice (mine.Scene, mine.UID, device, remark, operator, tp)
 	if err == nil {
-		mine.devices = append(mine.devices, info)
-	}
-	return err
-}
-
-func (mine *RoomInfo)SubtractDevice(uid string) error {
-	if !mine.HadDevice(uid){
-		return nil
-	}
-	err := nosql.SubtractRoomDevice(mine.UID, uid)
-	if err == nil {
-		for i := 0;i < len(mine.devices);i += 1 {
-			if mine.devices[i].SN == uid {
-				if i == len(mine.devices) - 1 {
-					mine.devices = append(mine.devices[:i])
-				}else{
-					mine.devices = append(mine.devices[:i], mine.devices[i+1:]...)
-				}
-				break
-			}
-		}
+		return info.UpdateRoom(mine.UID, operator)
 	}
 	return err
 }

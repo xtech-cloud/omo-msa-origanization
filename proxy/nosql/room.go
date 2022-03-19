@@ -2,7 +2,6 @@ package nosql
 
 import (
 	"context"
-	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.organization/proxy"
@@ -22,7 +21,7 @@ type Room struct {
 	Scene    string `json:"scene" bson:"scene"`
 	Remark   string `json:"remark" bson:"remark"`
 	Quotes   []string `json:"quotes" bson::"quotes"`
-	Devices  []*proxy.DeviceInfo `json:"devices" bson:"devices"`
+	Displays  []proxy.DisplayInfo `json:"displays" bson:"displays"`
 }
 
 func CreateRoom(info *Room) error {
@@ -115,26 +114,16 @@ func UpdateRoomBase(uid, name, remark, operator string) error {
 	return err
 }
 
+func UpdateRoomDisplays(uid, operator string, list []*proxy.DisplayInfo) error {
+	msg := bson.M{"displays": list, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableRoom, uid, msg)
+	return err
+}
+
 func UpdateRoomQuotes(uid, operator string, arr []string) error {
 	msg := bson.M{"operator": operator, "quotes": arr, "updatedAt": time.Now()}
 	_, err := updateOne(TableRoom, uid, msg)
 	return err
 }
 
-func AppendRoomDevice(uid string, device *proxy.DeviceInfo) error {
-	if len(uid) < 1 {
-		return errors.New("the uid is empty")
-	}
-	msg := bson.M{"devices": device}
-	_, err := appendElement(TableRoom, uid, msg)
-	return err
-}
 
-func SubtractRoomDevice(uid, device string) error {
-	if len(uid) < 1 {
-		return errors.New("the uid is empty")
-	}
-	msg := bson.M{"devices": bson.M{"sn": device}}
-	_, err := removeElement(TableRoom, uid, msg)
-	return err
-}

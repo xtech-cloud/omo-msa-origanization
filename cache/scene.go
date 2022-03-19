@@ -560,7 +560,7 @@ func (mine *SceneInfo)CreateRoom(info *pb.ReqRoomAdd) (*RoomInfo, error) {
 	db.Remark = info.Remark
 	db.Scene = info.Owner
 	db.Quotes = make([]string, 0, 1)
-	db.Devices = make([]*proxy.DeviceInfo, 0, 1)
+	db.Displays = make([]proxy.DisplayInfo, 0, 1)
 	err := nosql.CreateRoom(db)
 	if err == nil {
 		tmp := new(RoomInfo)
