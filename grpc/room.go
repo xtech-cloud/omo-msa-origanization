@@ -254,13 +254,17 @@ func (mine *RoomService) AppendDevice (ctx context.Context, in *pb.ReqRoomDevice
 		out.Status = outError(path,"the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
-	if cache.Context().HadBindDeviceInRoom(in.Device) {
-		out.Status = outError(path,"the device had bind by other room", pbstatus.ResultStatus_Repeated)
-		return nil
-	}
+	//if cache.Context().HadBindDeviceInRoom(in.Device) {
+	//	out.Status = outError(path,"the device had bind by other room", pbstatus.ResultStatus_Repeated)
+	//	return nil
+	//}
 	info := cache.Context().GetRoom(in.Uid)
 	if info == nil {
 		out.Status = outError(path,"the room not found ", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	if info.HadDeviceByType(uint8(in.Type)) {
+		out.Status = outError(path,"the room had the device of type", pbstatus.ResultStatus_Repeated)
 		return nil
 	}
 

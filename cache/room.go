@@ -3,10 +3,8 @@ package cache
 import (
 	"errors"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
-	"omo.msa.organization/proxy"
 	"omo.msa.organization/proxy/nosql"
 	"omo.msa.organization/tool"
-	"time"
 )
 
 type RoomInfo struct {
@@ -14,7 +12,7 @@ type RoomInfo struct {
 	Remark string
 	Scene string
 	Quotes []string
-	displays []*proxy.DisplayInfo
+	//displays []*proxy.DisplayInfo
 }
 
 func (mine *cacheContext)GetRoom(uid string) *RoomInfo {
@@ -92,10 +90,10 @@ func (mine *RoomInfo)initInfo(db *nosql.Room)  {
 		mine.Quotes = make([]string, 0, 1)
 	}
 
-	mine.displays = make([]*proxy.DisplayInfo, 0, len(db.Displays))
-	for _, display := range db.Displays {
-		mine.displays = append(mine.displays, display.Clone())
-	}
+	//mine.displays = make([]*proxy.DisplayInfo, 0, len(db.Displays))
+	//for _, display := range db.Displays {
+	//	mine.displays = append(mine.displays, display.Clone())
+	//}
 }
 
 func (mine *RoomInfo)UpdateBase(name, remark, operator string) error {
@@ -164,29 +162,30 @@ func (mine *RoomInfo)UpdateDisplays(sn, group, operator string, showing bool, di
 	if displays == nil {
 		displays = make([]string, 0, 1)
 	}
-	if showing {
-		return device.UpdateShowings(operator, displays)
-	}else{
-		tempArr := make([]*proxy.DisplayInfo, 0, len(mine.displays))
-		tempArr = append(tempArr, mine.displays...)
-		had := false
-		for _, item := range tempArr {
-			if item.Type == device.Type && item.Group == group {
-				had = true
-				item.Showings = displays
-				item.Updated = time.Now()
-				break
-			}
-		}
-		if !had {
-			tempArr = append(tempArr, &proxy.DisplayInfo{Group: group, Type: device.Type, Showings: make([]string, 0, 1), Updated: time.Now()})
-		}
-		err := nosql.UpdateRoomDisplays(mine.UID, operator, tempArr)
-		if err == nil {
-			mine.displays = tempArr
-		}
-		return err
-	}
+	return device.UpdateShowings(operator, displays)
+	//if showing {
+	//	return device.UpdateShowings(operator, displays)
+	//}else{
+		//tempArr := make([]*proxy.DisplayInfo, 0, len(mine.displays))
+		//tempArr = append(tempArr, mine.displays...)
+		//had := false
+		//for _, item := range tempArr {
+		//	if item.Type == device.Type && item.Group == group {
+		//		had = true
+		//		item.Showings = displays
+		//		item.Updated = time.Now()
+		//		break
+		//	}
+		//}
+		//if !had {
+		//	tempArr = append(tempArr, &proxy.DisplayInfo{Group: group, Type: device.Type, Showings: make([]string, 0, 1), Updated: time.Now()})
+		//}
+		//err := nosql.UpdateRoomDisplays(mine.UID, operator, tempArr)
+		//if err == nil {
+		//	mine.displays = tempArr
+		//}
+		//return err
+	//}
 }
 
 func (mine *RoomInfo)HadDevice(sn string) bool {
@@ -222,14 +221,18 @@ func (mine *RoomInfo)Products() []*pb.ProductInfo {
 
 func (mine *RoomInfo)switchDisplays(tp uint32, arr []string) []*pb.DisplayInfo {
 	list := make([]*pb.DisplayInfo, 0, 10)
-	prepares := mine.GetPrepareDisplays(tp)
-	for _, prepare := range prepares {
-		tmp := new(pb.DisplayInfo)
-		tmp.Group = prepare.Group
-		tmp.Prepares = prepare.Showings
-		tmp.Showings = arr
-		list = append(list, tmp)
-	}
+	tmp := new(pb.DisplayInfo)
+	tmp.Group = ""
+	tmp.Showings = arr
+	list = append(list, tmp)
+	//prepares := mine.GetPrepareDisplays(tp)
+	//for _, prepare := range prepares {
+	//	tmp := new(pb.DisplayInfo)
+	//	tmp.Group = prepare.Group
+	//	tmp.Prepares = prepare.Showings
+	//	tmp.Showings = arr
+	//	list = append(list, tmp)
+	//}
 	return list
 }
 
@@ -243,15 +246,15 @@ func (mine *RoomInfo)GetDevice(sn string) *DeviceInfo {
 	return nil
 }
 
-func (mine *RoomInfo)GetPrepareDisplays(tp uint32) []*proxy.DisplayInfo {
-	list := make([]*proxy.DisplayInfo, 0, 3)
-	for _, item := range mine.displays {
-		if item.Type == tp {
-			list = append(list, item)
-		}
-	}
-	return list
-}
+//func (mine *RoomInfo)GetPrepareDisplays(tp uint32) []*proxy.DisplayInfo {
+//	list := make([]*proxy.DisplayInfo, 0, 3)
+//	for _, item := range mine.displays {
+//		if item.Type == tp {
+//			list = append(list, item)
+//		}
+//	}
+//	return list
+//}
 
 func (mine *RoomInfo)AppendDevice(device, remark, operator string, tp uint32) error {
 	if mine.HadDevice(device){

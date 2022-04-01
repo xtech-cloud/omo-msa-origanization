@@ -12,7 +12,9 @@ type DisplayInfo struct {
 type DomainInfo struct {
 	Type uint8 `json:"type" bson:"type"`
 	UID string `json:"uid" bson:"uid"`
+	Name string `json:"name" bson:"name"`
 	Remark string `json:"remark" bson:"remark"`
+	Keywords string `json:"keywords" bson:"keywords"`
 	Updated time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
