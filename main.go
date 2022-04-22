@@ -43,6 +43,7 @@ func main() {
 	_ = proto.RegisterSceneServiceHandler(service.Server(), new(grpc.SceneService))
 	_ = proto.RegisterGroupServiceHandler(service.Server(), new(grpc.GroupService))
 	_ = proto.RegisterRoomServiceHandler(service.Server(), new(grpc.RoomService))
+	_ = proto.RegisterRegionServiceHandler(service.Server(), new(grpc.RegionService))
 
 	app, _ := filepath.Abs(os.Args[0])
 

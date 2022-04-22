@@ -151,7 +151,6 @@ func (mine *GroupInfo)UpdateAddress(country, province, city, zone, operator stri
 	return err
 }
 
-
 func (mine *GroupInfo)HadMember(member string) bool {
 	if mine.Master == member || mine.Assistant == member {
 		return true
@@ -187,7 +186,11 @@ func (mine *GroupInfo)SubtractMember(member string) error {
 	if err == nil {
 		for i := 0;i < len(mine.members);i += 1 {
 			if mine.members[i] == member {
-				mine.members = append(mine.members[:i], mine.members[i+1:]...)
+				if i == len(mine.members) - 1 {
+					mine.members = append(mine.members[:i])
+				}else{
+					mine.members = append(mine.members[:i], mine.members[i+1:]...)
+				}
 				break
 			}
 		}

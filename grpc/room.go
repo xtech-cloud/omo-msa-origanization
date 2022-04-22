@@ -114,7 +114,7 @@ func (mine *RoomService)GetList(ctx context.Context, in *pb.RequestFilter, out *
 	path := "room.getList"
 	inLog(path, in)
 	var list []*cache.RoomInfo
-	if in.Parent == "" {
+	if in.Scene == "" {
 		if in.Key == "device" {
 			list = cache.Context().GetRoomsByDevice(in.Value)
 		}else if in.Key == "quote" {
@@ -123,7 +123,7 @@ func (mine *RoomService)GetList(ctx context.Context, in *pb.RequestFilter, out *
 			list = make([]*cache.RoomInfo, 0, 1)
 		}
 	}else{
-		scene := cache.Context().GetScene(in.Parent)
+		scene := cache.Context().GetScene(in.Scene)
 		if scene == nil {
 			out.Status = outError(path,"not found the scene ", pbstatus.ResultStatus_NotExisted)
 			return nil

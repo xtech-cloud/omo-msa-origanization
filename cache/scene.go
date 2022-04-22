@@ -42,9 +42,9 @@ type SceneInfo struct {
 	Address nosql.AddressInfo
 	members []string
 	parents []string
+	Domains []proxy.DomainInfo
 	groups []*GroupInfo
 	rooms  []*RoomInfo
-	Domains []proxy.DomainInfo
 }
 
 func (mine *cacheContext)CreateScene(info *SceneInfo) error {
@@ -219,10 +219,6 @@ func (mine *SceneInfo)initInfo(db *nosql.Scene)  {
 	if mine.Domains == nil {
 		mine.Domains = make([]proxy.DomainInfo, 0, 1)
 	}
-	//mine.Exhibitions = db.Displays
-	//if mine.Exhibitions == nil {
-	//	mine.Exhibitions = make([]proxy.ShowingInfo, 0, 1)
-	//}
 }
 
 func (mine *SceneInfo)initGroups() {
@@ -452,6 +448,7 @@ func (mine *SceneInfo)HadParent(uid string) bool {
 	return false
 }
 
+//region Group Fun
 func (mine *SceneInfo)CreateGroup(info *pb.ReqGroupAdd) (*GroupInfo, error) {
 	mine.initGroups()
 	db := new(nosql.Group)
@@ -546,7 +543,96 @@ func (mine *SceneInfo)GetGroups(number, page uint32) (uint32,uint32,[]*GroupInfo
 	total, maxPage, list := checkPage(page, number, mine.groups)
 	return total, maxPage, list.([]*GroupInfo)
 }
+//endregion
 
+//region Region
+func (mine *SceneInfo)CreateRegion(info *pb.ReqRegionAdd) (*RegionInfo, error) {
+	db := new(nosql.Region)
+	db.UID = primitive.NewObjectID()
+	db.ID = nosql.GetRegionNextID()
+	db.CreatedTime = time.Now()
+	db.UpdatedTime = time.Now()
+	db.Operator = info.Operator
+	db.Creator = info.Operator
+	db.Name = info.Name
+	db.Remark = info.Remark
+	db.Location = info.Location
+	db.Scene = info.Scene
+	db.Parent = info.Parent
+	db.Master = ""
+	if info.Address != nil {
+		db.Address = nosql.AddressInfo{
+			Country: info.Address.Country,
+			Province: info.Address.Province,
+			City: info.Address.City,
+			Zone: info.Address.Zone,
+		}
+	}else{
+		db.Address = nosql.AddressInfo{
+			Country: "",
+			Province: "",
+			City: "",
+			Zone: "",
+		}
+	}
+
+	db.Members = make([]string, 0, 1)
+	err := nosql.CreateRegion(db)
+	if err == nil {
+		tmp := new(RegionInfo)
+		tmp.initInfo(db)
+		return tmp,nil
+	}
+	return nil,err
+}
+
+func (mine *SceneInfo)HadRegion(uid string) bool {
+	info,_ := mine.GetRegion(uid)
+	if info != nil {
+		return true
+	}
+	return false
+}
+
+func (mine *SceneInfo)HadRegionByName(name string) bool {
+	arr := cacheCtx.GetRegionsByScene(mine.UID)
+	for _, group := range arr {
+		if group.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (mine *SceneInfo)GetRegion(uid string) (*RegionInfo,error) {
+	return cacheCtx.GetRegion(uid)
+}
+
+func (mine *SceneInfo)RemoveRegion(uid, operator string) error {
+	info,er := mine.GetRegion(uid)
+	if er != nil {
+		return er
+	}
+	if info == nil {
+		return nil
+	}
+	return info.Remove(operator)
+}
+
+func (mine *SceneInfo)GetRegions(number, page uint32) (uint32,uint32,[]*RegionInfo) {
+	array := cacheCtx.GetRegionsByScene(mine.UID)
+	if number < 1 {
+		number = 10
+	}
+	if len(array) <1 {
+		return 0, 0, make([]*RegionInfo, 0, 1)
+	}
+	total, maxPage, list := checkPage(page, number, array)
+	return total, maxPage, list.([]*RegionInfo)
+}
+//endregion
+
+//region Room Fun
 func (mine *SceneInfo)CreateRoom(info *pb.ReqRoomAdd) (*RoomInfo, error) {
 	mine.initRooms()
 	db := new(nosql.Room)
@@ -668,3 +754,4 @@ func (mine *SceneInfo) ClearQuotes(operator string, list []string) {
 		}
 	}
 }
+//endregion

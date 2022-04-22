@@ -12,7 +12,6 @@ type RoomInfo struct {
 	Remark string
 	Scene string
 	Quotes []string
-	//displays []*proxy.DisplayInfo
 }
 
 func (mine *cacheContext)GetRoom(uid string) *RoomInfo {
@@ -89,11 +88,6 @@ func (mine *RoomInfo)initInfo(db *nosql.Room)  {
 	if mine.Quotes == nil {
 		mine.Quotes = make([]string, 0, 1)
 	}
-
-	//mine.displays = make([]*proxy.DisplayInfo, 0, len(db.Displays))
-	//for _, display := range db.Displays {
-	//	mine.displays = append(mine.displays, display.Clone())
-	//}
 }
 
 func (mine *RoomInfo)UpdateBase(name, remark, operator string) error {
@@ -163,29 +157,6 @@ func (mine *RoomInfo)UpdateDisplays(sn, group, operator string, showing bool, di
 		displays = make([]string, 0, 1)
 	}
 	return device.UpdateShowings(operator, displays)
-	//if showing {
-	//	return device.UpdateShowings(operator, displays)
-	//}else{
-		//tempArr := make([]*proxy.DisplayInfo, 0, len(mine.displays))
-		//tempArr = append(tempArr, mine.displays...)
-		//had := false
-		//for _, item := range tempArr {
-		//	if item.Type == device.Type && item.Group == group {
-		//		had = true
-		//		item.Showings = displays
-		//		item.Updated = time.Now()
-		//		break
-		//	}
-		//}
-		//if !had {
-		//	tempArr = append(tempArr, &proxy.DisplayInfo{Group: group, Type: device.Type, Showings: make([]string, 0, 1), Updated: time.Now()})
-		//}
-		//err := nosql.UpdateRoomDisplays(mine.UID, operator, tempArr)
-		//if err == nil {
-		//	mine.displays = tempArr
-		//}
-		//return err
-	//}
 }
 
 func (mine *RoomInfo)HadDevice(sn string) bool {

@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// 部门或者虚拟组
 type Group struct {
 	UID         primitive.ObjectID `bson:"_id"`
 	ID          uint64             `json:"id" bson:"id"`

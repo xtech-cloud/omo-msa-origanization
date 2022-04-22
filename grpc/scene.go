@@ -166,7 +166,7 @@ func (mine *SceneService)GetByFilter(ctx context.Context, in *pb.RequestFilter, 
 	if in.Key == "shortname" {
 		list = make([]*cache.SceneInfo, 0 ,1)
 	}else if in.Key == "type" {
-		tp,er := strconv.ParseUint(in.Parent, 10, 32)
+		tp,er := strconv.ParseUint(in.Scene, 10, 32)
 		if er != nil {
 			out.Status = outError(path, er.Error(), pbstatus.ResultStatus_DBException)
 			return nil

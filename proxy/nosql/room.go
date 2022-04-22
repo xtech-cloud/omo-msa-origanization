@@ -20,8 +20,7 @@ type Room struct {
 	Operator string `json:"operator" bson:"operator"`
 	Scene    string `json:"scene" bson:"scene"`
 	Remark   string `json:"remark" bson:"remark"`
-	Quotes   []string `json:"quotes" bson::"quotes"`
-	//Displays  []proxy.DisplayInfo `json:"displays" bson:"displays"`
+	Quotes   []string `json:"quotes" bson:"quotes"`
 }
 
 func CreateRoom(info *Room) error {
