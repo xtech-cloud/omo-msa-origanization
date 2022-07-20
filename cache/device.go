@@ -12,6 +12,7 @@ type DeviceInfo struct {
 	Remark string
 	Scene string
 	Room string
+	Area string
 	SN string
 	displays []string
 }
@@ -29,16 +30,18 @@ func (mine *DeviceInfo)initInfo(db *nosql.Device)  {
 	mine.Room = db.Room
 	mine.Type = db.Type
 	mine.SN = db.SN
+	mine.Area = db.Area
 	mine.displays = db.Displays
 	if mine.displays == nil {
 		mine.displays = make([]string, 0, 1)
 	}
 }
 
-func (mine *DeviceInfo)UpdateRoom(room, operator string) error {
-	err := nosql.UpdateDeviceRoom(mine.UID, room, operator)
+func (mine *DeviceInfo)UpdateRoom(room, area, operator string) error {
+	err := nosql.UpdateDeviceRoom(mine.UID, room,area, operator)
 	if err == nil {
 		mine.Room = room
+		mine.Area = area
 		mine.Operator = operator
 	}
 	return err
@@ -53,7 +56,7 @@ func (mine *DeviceInfo)UpdateShowings(operator string, list []string) error {
 	return err
 }
 
-func (mine *cacheContext)createDevice(scene, room, sn, remark, operator string, tp uint32) (*DeviceInfo, error) {
+func (mine *cacheContext)createDevice(scene, room, area, sn, remark, operator string, tp uint32) (*DeviceInfo, error) {
 	db := new(nosql.Device)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetRoomNextID()
@@ -67,6 +70,7 @@ func (mine *cacheContext)createDevice(scene, room, sn, remark, operator string, 
 	db.Room = room
 	db.Type = tp
 	db.SN = sn
+	db.Area = area
 	db.Displays = make([]string, 0, 1)
 	err := nosql.CreateDevice(db)
 	if err == nil {
@@ -87,10 +91,10 @@ func (mine *cacheContext)GetDevice(sn string) (*DeviceInfo,error) {
 	return tmp,nil
 }
 
-func (mine *cacheContext)checkDevice(scene, room, sn, remark, operator string, tp uint32) (*DeviceInfo,error) {
+func (mine *cacheContext)checkDevice(scene, room, area, sn, remark, operator string, tp uint32) (*DeviceInfo,error) {
 	info,err := mine.GetDevice(sn)
 	if err == nil {
 		return info,nil
 	}
-	return mine.createDevice(scene, room, sn, remark, operator, tp)
+	return mine.createDevice(scene, room, area, sn, remark, operator, tp)
 }

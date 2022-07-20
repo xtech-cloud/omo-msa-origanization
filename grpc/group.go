@@ -326,6 +326,23 @@ func (mine *GroupService) UpdateAssistant (ctx context.Context, in *pb.RequestFl
 	return nil
 }
 
+func (mine *GroupService) UpdateByFilter (ctx context.Context, in *pb.ReqUpdateFilter, out *pb.ReplyInfo) error {
+	path := "room.updateByFilter"
+	inLog(path, in)
+	if len(in.Scene) < 1 {
+		out.Status = outError(path,"the scene or room is empty ", pbstatus.ResultStatus_Empty)
+		return nil
+	}
+	scene := cache.Context().GetScene(in.Scene)
+	if scene == nil {
+		out.Status = outError(path,"the scene not found ", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+
+	out.Status = outLog(path, out)
+	return nil
+}
+
 func (mine *GroupService) AppendMember (ctx context.Context, in *pb.RequestInfo, out *pb.ReplyList) error {
 	path := "group.appendMember"
 	inLog(path, in)

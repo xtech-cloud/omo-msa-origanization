@@ -19,6 +19,7 @@ type Device struct {
 	Operator string `json:"operator" bson:"operator"`
 	Scene    string `json:"scene" bson:"scene"`
 	Room     string `json:"room" bson:"room"`
+	Area     string `json:"area" bson:"area"`
 	Remark   string `json:"remark" bson:"remark"`
 	Type     uint32 `json:"type" bson:"type"` //产品类型
 	SN 		 string `json:"sn" bson:"sn"`
@@ -133,8 +134,8 @@ func UpdateDeviceBase(uid, name, remark, operator string) error {
 	return err
 }
 
-func UpdateDeviceRoom(uid, room, operator string) error {
-	msg := bson.M{"room": room, "operator": operator, "updatedAt": time.Now()}
+func UpdateDeviceRoom(uid, room, area, operator string) error {
+	msg := bson.M{"room": room, "area": area, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }

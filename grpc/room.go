@@ -247,6 +247,23 @@ func (mine *RoomService) UpdateDisplays (ctx context.Context, in *pb.ReqRoomDisp
 	return nil
 }
 
+func (mine *RoomService) UpdateByFilter (ctx context.Context, in *pb.ReqUpdateFilter, out *pb.ReplyInfo) error {
+	path := "room.updateByFilter"
+	inLog(path, in)
+	if len(in.Scene) < 1 {
+		out.Status = outError(path,"the scene or room is empty ", pbstatus.ResultStatus_Empty)
+		return nil
+	}
+	scene := cache.Context().GetScene(in.Scene)
+	if scene == nil {
+		out.Status = outError(path,"the scene not found ", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+
+	out.Status = outLog(path, out)
+	return nil
+}
+
 func (mine *RoomService) AppendDevice (ctx context.Context, in *pb.ReqRoomDevice, out *pb.ReplyRoomDevices) error {
 	path := "room.appendDevice"
 	inLog(path, in)
@@ -268,7 +285,7 @@ func (mine *RoomService) AppendDevice (ctx context.Context, in *pb.ReqRoomDevice
 		return nil
 	}
 
-	err := info.AppendDevice(in.Device, in.Remark, in.Operator, in.Type)
+	err := info.AppendDevice(in.Area, in.Device, in.Remark, in.Operator, in.Type)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -295,7 +312,7 @@ func (mine *RoomService) SubtractDevice (ctx context.Context, in *pb.ReqRoomDevi
 		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
-	err = device.UpdateRoom("", in.Operator)
+	err = device.UpdateRoom("", "", in.Operator)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil

@@ -7,6 +7,7 @@ import (
 	"omo.msa.organization/tool"
 )
 
+//房间大厅
 type RoomInfo struct {
 	baseInfo
 	Remark string
@@ -183,7 +184,7 @@ func (mine *RoomInfo)Products() []*pb.ProductInfo {
 	devices := mine.Devices()
 	list := make([]*pb.ProductInfo, 0, len(devices))
 	for _, device := range devices {
-		tmp := &pb.ProductInfo{Uid: device.SN, Type: device.Type, Remark: device.Remark}
+		tmp := &pb.ProductInfo{Uid: device.SN, Area: device.Area, Type: device.Type, Remark: device.Remark}
 		tmp.Displays = mine.switchDisplays(device.Type, device.displays)
 		list = append(list, tmp)
 	}
@@ -227,13 +228,13 @@ func (mine *RoomInfo)GetDevice(sn string) *DeviceInfo {
 //	return list
 //}
 
-func (mine *RoomInfo)AppendDevice(device, remark, operator string, tp uint32) error {
+func (mine *RoomInfo)AppendDevice(area, device, remark, operator string, tp uint32) error {
 	if mine.HadDevice(device){
 		return nil
 	}
-	info,err := cacheCtx.checkDevice (mine.Scene, mine.UID, device, remark, operator, tp)
+	info,err := cacheCtx.checkDevice (mine.Scene, mine.UID, area, device, remark, operator, tp)
 	if err == nil {
-		return info.UpdateRoom(mine.UID, operator)
+		return info.UpdateRoom(mine.UID, area, operator)
 	}
 	return err
 }
