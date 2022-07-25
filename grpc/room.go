@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
@@ -146,7 +147,6 @@ func (mine *RoomService)GetList(ctx context.Context, in *pb.RequestFilter, out *
 		}
 	}
 
-
 	out.List = make([]*pb.RoomInfo, 0, len(list))
 	for _, value := range list {
 		out.List = append(out.List, switchRoom(value))
@@ -280,10 +280,10 @@ func (mine *RoomService) AppendDevice (ctx context.Context, in *pb.ReqRoomDevice
 		out.Status = outError(path,"the room not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	if info.HadDeviceByType(uint8(in.Type)) {
-		out.Status = outError(path,"the room had the device of type", pbstatus.ResultStatus_Repeated)
-		return nil
-	}
+	//if info.HadDeviceByType(uint8(in.Type)) {
+	//	out.Status = outError(path,"the room had the device of type", pbstatus.ResultStatus_Repeated)
+	//	return nil
+	//}
 
 	err := info.AppendDevice(in.Area, in.Device, in.Remark, in.Operator, in.Type)
 	if err != nil {
@@ -318,6 +318,40 @@ func (mine *RoomService) SubtractDevice (ctx context.Context, in *pb.ReqRoomDevi
 		return nil
 	}
 	out.List = info.Products()
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *RoomService) GetDevices (ctx context.Context, in *pb.RequestFilter, out *pb.ReplyRoomDevices) error {
+	path := "room.getDevices"
+	inLog(path, in)
+	if len(in.Scene) < 1 {
+		out.Status = outError(path,"the scene uid is empty ", pbstatus.ResultStatus_Empty)
+		return nil
+	}
+	info := cache.Context().GetScene(in.Scene)
+	if info == nil {
+		out.Status = outError(path,"the scene not found ", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	var list []*cache.DeviceInfo
+	var err error
+	if in.Key == "devices" {
+		list,err = info.GetDevices(in.List)
+	}else{
+		err = errors.New("the key not defined")
+	}
+
+	if err != nil {
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
+	out.List = make([]*pb.ProductInfo, 0, len(list))
+	for _, device := range list {
+		tmp := &pb.ProductInfo{Uid: device.SN, Area: device.Area, Type: device.Type, Remark: device.Remark}
+		tmp.Displays = cache.Context().SwitchDisplays(device.Type, device.Displays)
+		out.List = append(out.List, tmp)
+	}
 	out.Status = outLog(path, out)
 	return nil
 }

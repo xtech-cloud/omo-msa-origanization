@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.organization/proxy"
 	"omo.msa.organization/proxy/nosql"
+	"omo.msa.organization/tool"
 	"time"
 )
 
@@ -723,6 +724,22 @@ func (mine *SceneInfo)GetRoomsByDevice(sn string) []*RoomInfo {
 		}
 	}
 	return list
+}
+
+func (mine *SceneInfo)GetDevices(arr []string) ([]*DeviceInfo,error) {
+	all,err := nosql.GetDevicesByScene(mine.UID)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*DeviceInfo, 0, len(all))
+	for _, device := range all {
+		if tool.HasItem(arr, device.SN) {
+			info := new(DeviceInfo)
+			info.initInfo(device)
+			list = append(list, info)
+		}
+	}
+	return list, nil
 }
 
 func (mine *SceneInfo)RemoveRoom(uid, operator string) error {

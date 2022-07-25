@@ -14,7 +14,7 @@ type DeviceInfo struct {
 	Room string
 	Area string
 	SN string
-	displays []string
+	Displays []string
 }
 
 func (mine *DeviceInfo)initInfo(db *nosql.Device)  {
@@ -31,9 +31,9 @@ func (mine *DeviceInfo)initInfo(db *nosql.Device)  {
 	mine.Type = db.Type
 	mine.SN = db.SN
 	mine.Area = db.Area
-	mine.displays = db.Displays
-	if mine.displays == nil {
-		mine.displays = make([]string, 0, 1)
+	mine.Displays = db.Displays
+	if mine.Displays == nil {
+		mine.Displays = make([]string, 0, 1)
 	}
 }
 
@@ -50,7 +50,7 @@ func (mine *DeviceInfo)UpdateRoom(room, area, operator string) error {
 func (mine *DeviceInfo)UpdateShowings(operator string, list []string) error {
 	err := nosql.UpdateDeviceDisplays(mine.UID, operator, list)
 	if err == nil {
-		mine.displays = list
+		mine.Displays = list
 		mine.Operator = operator
 	}
 	return err

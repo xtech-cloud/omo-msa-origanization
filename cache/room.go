@@ -185,13 +185,13 @@ func (mine *RoomInfo)Products() []*pb.ProductInfo {
 	list := make([]*pb.ProductInfo, 0, len(devices))
 	for _, device := range devices {
 		tmp := &pb.ProductInfo{Uid: device.SN, Area: device.Area, Type: device.Type, Remark: device.Remark}
-		tmp.Displays = mine.switchDisplays(device.Type, device.displays)
+		tmp.Displays = cacheCtx.SwitchDisplays(device.Type, device.Displays)
 		list = append(list, tmp)
 	}
 	return list
 }
 
-func (mine *RoomInfo)switchDisplays(tp uint32, arr []string) []*pb.DisplayInfo {
+func (mine *cacheContext)SwitchDisplays(tp uint32, arr []string) []*pb.DisplayInfo {
 	list := make([]*pb.DisplayInfo, 0, 10)
 	tmp := new(pb.DisplayInfo)
 	tmp.Group = ""
