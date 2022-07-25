@@ -111,6 +111,23 @@ func GetDevicesByScene(scene string) ([]*Device, error) {
 	return items, nil
 }
 
+func GetDevicesByArea(scene, area string) ([]*Device, error) {
+	cursor, err1 := findMany(TableDevice, bson.M{"scene": scene, "area":area, "deleteAt": new(time.Time)}, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Device, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Device)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func GetDevicesByRoom(scene,room string) ([]*Device, error) {
 	cursor, err1 := findMany(TableDevice, bson.M{"scene": scene, "room":room, "deleteAt": new(time.Time)}, 0)
 	if err1 != nil {

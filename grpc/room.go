@@ -338,6 +338,8 @@ func (mine *RoomService) GetDevices (ctx context.Context, in *pb.RequestFilter, 
 	var err error
 	if in.Key == "devices" {
 		list,err = info.GetDevices(in.List)
+	}else if in.Key == "area" {
+		list,err = info.GetDevicesByArea(in.Value)
 	}else{
 		err = errors.New("the key not defined")
 	}
