@@ -15,15 +15,16 @@ type Device struct {
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
 
-	Creator  string `json:"creator" bson:"creator"`
-	Operator string `json:"operator" bson:"operator"`
-	Scene    string `json:"scene" bson:"scene"`
-	Room     string `json:"room" bson:"room"`
-	Area     string `json:"area" bson:"area"`
-	Remark   string `json:"remark" bson:"remark"`
-	Type     uint32 `json:"type" bson:"type"` //产品类型
-	SN 		 string `json:"sn" bson:"sn"`
-	Displays  []string `json:"displays" bson:"displays"`
+	Creator  string   `json:"creator" bson:"creator"`
+	Operator string   `json:"operator" bson:"operator"`
+	Scene    string   `json:"scene" bson:"scene"`       // 所属场景
+	Room     string   `json:"room" bson:"room"`         //所属房间
+	Area     string   `json:"area" bson:"area"`         //属于区域
+	Remark   string   `json:"remark" bson:"remark"`     //
+	Type     uint32   `json:"type" bson:"type"`         //产品类型
+	SN       string   `json:"sn" bson:"sn"`             //设备SN
+	Question string   `json:"question" bson:"question"` //关联的答题
+	Displays []string `json:"displays" bson:"displays"`
 }
 
 func CreateDevice(info *Device) error {
@@ -72,7 +73,7 @@ func GetDeviceByID(id uint64) (*Device, error) {
 	return model, nil
 }
 
-func RemoveDevice(uid,operator string) error {
+func RemoveDevice(uid, operator string) error {
 	_, err := removeOne(TableDevice, uid, operator)
 	return err
 }
@@ -112,7 +113,7 @@ func GetDevicesByScene(scene string) ([]*Device, error) {
 }
 
 func GetDevicesByArea(scene, area string) ([]*Device, error) {
-	cursor, err1 := findMany(TableDevice, bson.M{"scene": scene, "area":area, "deleteAt": new(time.Time)}, 0)
+	cursor, err1 := findMany(TableDevice, bson.M{"scene": scene, "area": area, "deleteAt": new(time.Time)}, 0)
 	if err1 != nil {
 		return nil, err1
 	}
@@ -128,8 +129,8 @@ func GetDevicesByArea(scene, area string) ([]*Device, error) {
 	return items, nil
 }
 
-func GetDevicesByRoom(scene,room string) ([]*Device, error) {
-	cursor, err1 := findMany(TableDevice, bson.M{"scene": scene, "room":room, "deleteAt": new(time.Time)}, 0)
+func GetDevicesByRoom(scene, room string) ([]*Device, error) {
+	cursor, err1 := findMany(TableDevice, bson.M{"scene": scene, "room": room, "deleteAt": new(time.Time)}, 0)
 	if err1 != nil {
 		return nil, err1
 	}
@@ -157,9 +158,14 @@ func UpdateDeviceRoom(uid, room, area, operator string) error {
 	return err
 }
 
+func UpdateDeviceQuestion(uid, question, operator string) error {
+	msg := bson.M{"question": question, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableDevice, uid, msg)
+	return err
+}
+
 func UpdateDeviceDisplays(uid, operator string, displays []string) error {
 	msg := bson.M{"displays": displays, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }
-

@@ -18,23 +18,24 @@ type Scene struct {
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Name        string              `json:"name" bson:"name"`
-	Type        uint8               `json:"type" bson:"type"`
-	Status      uint8               `json:"status" bson:"status"`
-	Short       string 				`json:"short" bson:"short"`
-	Cover       string              `json:"cover" bson:"cover"`
-	Master      string              `json:"master" bson:"master"`
-	Remark      string              `json:"remark" bson:"remark"`
-	Entity      string              `json:"entity" bson:"entity"`
-	Location    string              `json:"location" bson:"location"`
-	Supporter   string              `json:"supporter" bson:"supporter"`
-	Bucket      string `json:"bucket" bson:"bucket"`
-	Address     AddressInfo         `json:"address" bson:"address"`
+	Name      string      `json:"name" bson:"name"`
+	Type      uint8       `json:"type" bson:"type"`
+	Status    uint8       `json:"status" bson:"status"`
+	Short     string      `json:"short" bson:"short"`
+	Cover     string      `json:"cover" bson:"cover"`
+	Master    string      `json:"master" bson:"master"`
+	Remark    string      `json:"remark" bson:"remark"`
+	Entity    string      `json:"entity" bson:"entity"`
+	Location  string      `json:"location" bson:"location"`
+	Supporter string      `json:"supporter" bson:"supporter"`
+	Bucket    string      `json:"bucket" bson:"bucket"`
+	Address   AddressInfo `json:"address" bson:"address"`
 	//Exhibitions []string            `json:"exhibitions" bson:"exhibitions"`
 	//Displays    []proxy.ShowingInfo `json:"displays" bson:"displays"`
-	Members     []string            `json:"members" bson:"members"`
-	Parents     []string            `json:"parents" bson:"parents"`
-	Domains     []proxy.DomainInfo 	`json:"domains" bson:"domains"`
+	Members   []string           `json:"members" bson:"members"`
+	Parents   []string           `json:"parents" bson:"parents"`
+	Questions []string           `json:"questions" bson:"questions"`
+	Domains   []proxy.DomainInfo `json:"domains" bson:"domains"`
 }
 
 func CreateScene(info *Scene) error {
@@ -143,6 +144,12 @@ func UpdateSceneDomains(uid, operator string, domains []proxy.DomainInfo) error 
 	return err
 }
 
+func UpdateSceneQuestions(uid, operator string, arr []string) error {
+	msg := bson.M{"questions": arr, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
 func UpdateSceneShort(uid, operator, name string) error {
 	msg := bson.M{"short": name, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
@@ -213,4 +220,3 @@ func SubtractSceneMember(uid, member string) error {
 //	_, err := removeElement(TableScene, uid, msg)
 //	return err
 //}
-
