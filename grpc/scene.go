@@ -567,6 +567,12 @@ func (mine *SceneService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateFi
 	var err error
 	if in.Key == "questions" {
 		err = scene.UpdateQuestions(in.Operator, in.Values)
+	} else if in.Key == "limit" {
+		var limit int64
+		limit, err = strconv.ParseInt(in.Value, 10, 32)
+		if err == nil {
+			err = scene.UpdateLimit(in.Operator, int(limit))
+		}
 	} else {
 		err = errors.New("not defined the key")
 	}

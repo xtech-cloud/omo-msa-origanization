@@ -21,6 +21,7 @@ type Scene struct {
 	Name      string      `json:"name" bson:"name"`
 	Type      uint8       `json:"type" bson:"type"`
 	Status    uint8       `json:"status" bson:"status"`
+	Limit     uint16      `json:"limit" bson:"limit"`
 	Short     string      `json:"short" bson:"short"`
 	Cover     string      `json:"cover" bson:"cover"`
 	Master    string      `json:"master" bson:"master"`
@@ -146,6 +147,12 @@ func UpdateSceneDomains(uid, operator string, domains []proxy.DomainInfo) error 
 
 func UpdateSceneQuestions(uid, operator string, arr []string) error {
 	msg := bson.M{"questions": arr, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableScene, uid, msg)
+	return err
+}
+
+func UpdateSceneLimit(uid, operator string, limit uint16) error {
+	msg := bson.M{"limit": limit, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableScene, uid, msg)
 	return err
 }

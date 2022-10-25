@@ -32,6 +32,7 @@ type SceneInfo struct {
 	baseInfo
 	Type      SceneType
 	Status    SceneStatus
+	Limit     uint16
 	Location  string
 	Cover     string
 	Remark    string
@@ -67,6 +68,7 @@ func (mine *cacheContext) CreateScene(info *SceneInfo) error {
 	db.Location = info.Location
 	db.Address = info.Address
 	db.Bucket = info.Bucket
+	db.Limit = info.Limit
 	db.Members = make([]string, 0, 1)
 	db.Parents = make([]string, 0, 1)
 	db.Questions = make([]string, 0, 1)
@@ -206,6 +208,7 @@ func (mine *SceneInfo) initInfo(db *nosql.Scene) {
 	mine.Master = db.Master
 	mine.Location = db.Location
 	mine.Entity = db.Entity
+	mine.Limit = db.Limit
 
 	mine.ShortName = db.Short
 	mine.Type = SceneType(db.Type)
@@ -336,6 +339,15 @@ func (mine *SceneInfo) UpdateQuestions(operator string, arr []string) error {
 	err := nosql.UpdateSceneQuestions(mine.UID, operator, arr)
 	if err == nil {
 		mine.Questions = arr
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *SceneInfo) UpdateLimit(operator string, limit int) error {
+	err := nosql.UpdateSceneLimit(mine.UID, operator, uint16(limit))
+	if err == nil {
+		mine.Limit = uint16(limit)
 		mine.Operator = operator
 	}
 	return err
