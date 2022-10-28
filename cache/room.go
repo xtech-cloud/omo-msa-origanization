@@ -184,7 +184,7 @@ func (mine *RoomInfo) Products() []*pb.ProductInfo {
 	devices := mine.Devices()
 	list := make([]*pb.ProductInfo, 0, len(devices))
 	for _, device := range devices {
-		tmp := &pb.ProductInfo{Uid: device.SN, Area: device.Area, Type: device.Type, Remark: device.Remark, Question: device.Question}
+		tmp := &pb.ProductInfo{Uid: device.SN, Room: device.Room, Area: device.Area, Type: device.Type, Remark: device.Remark, Question: device.Question}
 		tmp.Displays = cacheCtx.SwitchDisplays(device.Type, device.Displays)
 		list = append(list, tmp)
 	}

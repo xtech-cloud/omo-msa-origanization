@@ -793,6 +793,20 @@ func (mine *SceneInfo) GetDevicesByArea(area string) ([]*DeviceInfo, error) {
 	return list, nil
 }
 
+func (mine *SceneInfo) GetDevicesByRoom(room string) ([]*DeviceInfo, error) {
+	all, err := nosql.GetDevicesByRoom(mine.UID, room)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*DeviceInfo, 0, len(all))
+	for _, device := range all {
+		info := new(DeviceInfo)
+		info.initInfo(device)
+		list = append(list, info)
+	}
+	return list, nil
+}
+
 func (mine *SceneInfo) RemoveRoom(uid, operator string) error {
 	if !mine.HadRoom(uid) {
 		return nil

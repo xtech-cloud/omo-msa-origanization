@@ -356,6 +356,8 @@ func (mine *RoomService) GetDevices(ctx context.Context, in *pb.RequestFilter, o
 		list, err = info.GetDevices(in.List)
 	} else if in.Key == "area" {
 		list, err = info.GetDevicesByArea(in.Value)
+	} else if in.Key == "room" {
+		list, err = info.GetDevicesByRoom(in.Value)
 	} else {
 		err = errors.New("the key not defined")
 	}
@@ -366,7 +368,7 @@ func (mine *RoomService) GetDevices(ctx context.Context, in *pb.RequestFilter, o
 	}
 	out.List = make([]*pb.ProductInfo, 0, len(list))
 	for _, device := range list {
-		tmp := &pb.ProductInfo{Uid: device.SN, Area: device.Area, Type: device.Type, Remark: device.Remark}
+		tmp := &pb.ProductInfo{Uid: device.SN, Room: device.Room, Area: device.Area, Type: device.Type, Remark: device.Remark}
 		tmp.Displays = cache.Context().SwitchDisplays(device.Type, device.Displays)
 		out.List = append(out.List, tmp)
 	}
