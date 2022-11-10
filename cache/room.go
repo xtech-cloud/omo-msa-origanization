@@ -118,6 +118,17 @@ func (mine *RoomInfo) Devices() []*DeviceInfo {
 	return devices
 }
 
+func (mine *RoomInfo) Areas() []*AreaInfo {
+	dbs, _ := nosql.GetAreasBy(mine.Scene, mine.UID)
+	areas := make([]*AreaInfo, 0, 5)
+	for _, db := range dbs {
+		tmp := new(AreaInfo)
+		tmp.initInfo(db)
+		areas = append(areas, tmp)
+	}
+	return areas
+}
+
 func (mine *RoomInfo) UpdateQuotes(operator string, list []string) error {
 	if list == nil {
 		list = make([]string, 0, 1)
@@ -181,11 +192,11 @@ func (mine *RoomInfo) HadDeviceByType(tp uint8) bool {
 }
 
 func (mine *RoomInfo) Products() []*pb.ProductInfo {
-	devices := mine.Devices()
-	list := make([]*pb.ProductInfo, 0, len(devices))
-	for _, device := range devices {
-		tmp := &pb.ProductInfo{Uid: device.SN, Room: device.Room, Area: device.Area, Type: device.Type, Remark: device.Remark, Question: device.Question}
-		tmp.Displays = cacheCtx.SwitchDisplays(device.Type, device.Displays)
+	array := mine.Areas()
+	list := make([]*pb.ProductInfo, 0, len(array))
+	for _, item := range array {
+		tmp := &pb.ProductInfo{Uid: item.SN, Room: mine.UID, Area: item.UID, Type: item.Type, Remark: item.Remark, Question: item.Question}
+		tmp.Displays = cacheCtx.SwitchDisplays(item.Type, item.Displays)
 		list = append(list, tmp)
 	}
 	return list

@@ -22,7 +22,7 @@ func switchRoom(info *cache.RoomInfo) *pb.RoomInfo {
 	tmp.Owner = info.Scene
 	tmp.Remark = info.Remark
 	tmp.Quotes = info.Quotes
-	tmp.Devices = info.Products()
+	tmp.Areas = info.Products()
 	return tmp
 }
 
