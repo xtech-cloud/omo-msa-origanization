@@ -107,16 +107,16 @@ func (mine *RoomInfo) UpdateBase(name, remark, operator string) error {
 	return err
 }
 
-func (mine *RoomInfo) Devices() []*DeviceInfo {
-	dbs, _ := nosql.GetDevicesByRoom(mine.Scene, mine.UID)
-	devices := make([]*DeviceInfo, 0, 5)
-	for _, device := range dbs {
-		tmp := new(DeviceInfo)
-		tmp.initInfo(device)
-		devices = append(devices, tmp)
-	}
-	return devices
-}
+//func (mine *RoomInfo) Devices() []*DeviceInfo {
+//	dbs, _ := nosql.GetDevicesByScene(mine.Scene)
+//	devices := make([]*DeviceInfo, 0, 5)
+//	for _, device := range dbs {
+//		tmp := new(DeviceInfo)
+//		tmp.initInfo(device)
+//		devices = append(devices, tmp)
+//	}
+//	return devices
+//}
 
 func (mine *RoomInfo) Areas() []*AreaInfo {
 	dbs, _ := nosql.GetAreasBy(mine.Scene, mine.UID)
@@ -161,20 +161,20 @@ func (mine *RoomInfo) HadQuotes(quotes []string) bool {
 }
 
 func (mine *RoomInfo) UpdateDisplays(sn, group, operator string, showing bool, displays []string) error {
-	device := mine.GetDevice(sn)
-	if device == nil {
+	area := mine.GetArea(sn)
+	if area == nil {
 		return errors.New("the device had not found by sn")
 	}
 	if displays == nil {
 		displays = make([]string, 0, 1)
 	}
-	return device.UpdateShowings(operator, displays)
+	return area.UpdateShowings(operator, displays)
 }
 
 func (mine *RoomInfo) HadDevice(sn string) bool {
-	devices := mine.Devices()
-	for _, device := range devices {
-		if device.SN == sn {
+	areas := mine.Areas()
+	for _, item := range areas {
+		if item.SN == sn {
 			return true
 		}
 	}
@@ -182,9 +182,9 @@ func (mine *RoomInfo) HadDevice(sn string) bool {
 }
 
 func (mine *RoomInfo) HadDeviceByType(tp uint8) bool {
-	devices := mine.Devices()
-	for _, device := range devices {
-		if device.Type == uint32(tp) {
+	areas := mine.Areas()
+	for _, item := range areas {
+		if item.Type == uint32(tp) {
 			return true
 		}
 	}
@@ -219,11 +219,21 @@ func (mine *cacheContext) SwitchDisplays(tp uint32, arr []string) []*pb.DisplayI
 	return list
 }
 
-func (mine *RoomInfo) GetDevice(sn string) *DeviceInfo {
-	devices := mine.Devices()
-	for _, device := range devices {
-		if device.SN == sn {
-			return device
+func (mine *RoomInfo) GetArea(sn string) *AreaInfo {
+	areas := mine.Areas()
+	for _, item := range areas {
+		if item.SN == sn {
+			return item
+		}
+	}
+	return nil
+}
+
+func (mine *RoomInfo) GetAreaBy(uid string) *AreaInfo {
+	areas := mine.Areas()
+	for _, item := range areas {
+		if item.UID == uid {
+			return item
 		}
 	}
 	return nil
@@ -243,9 +253,13 @@ func (mine *RoomInfo) AppendDevice(area, device, remark, operator string, tp uin
 	if mine.HadDevice(device) {
 		return nil
 	}
-	info, err := cacheCtx.checkDevice(mine.Scene, mine.UID, area, device, remark, operator, tp)
-	if err == nil {
-		return info.UpdateRoom(mine.UID, area, operator)
+	info := mine.GetAreaBy(area)
+	if info != nil {
+		return info.UpdateDevice(device, operator, tp)
 	}
-	return err
+	//info, err := cacheCtx.checkDevice(mine.Scene, mine.UID, area, device, remark, operator, tp)
+	//if err == nil {
+	//	return info.UpdateRoom(mine.UID, area, operator)
+	//}
+	return nil
 }

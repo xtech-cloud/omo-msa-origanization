@@ -752,57 +752,76 @@ func (mine *SceneInfo) GetRoomsByDevice(sn string) []*RoomInfo {
 	return list
 }
 
-func (mine *SceneInfo) GetDevice(sn string) *DeviceInfo {
+//func (mine *SceneInfo) GetDevice(sn string) *DeviceInfo {
+//	mine.initRooms()
+//	for _, item := range mine.rooms {
+//		device := item.GetDevice(sn)
+//		if device != nil {
+//			return device
+//		}
+//	}
+//	return nil
+//}
+
+func (mine *SceneInfo) GetAreaBySN(sn string) *AreaInfo {
 	mine.initRooms()
 	for _, item := range mine.rooms {
-		device := item.GetDevice(sn)
-		if device != nil {
-			return device
+		tmp := item.GetArea(sn)
+		if tmp != nil {
+			return tmp
 		}
 	}
 	return nil
 }
 
-func (mine *SceneInfo) GetDevices(arr []string) ([]*DeviceInfo, error) {
-	all, err := nosql.GetDevicesByScene(mine.UID)
+func (mine *SceneInfo) GetArea(uid string) *AreaInfo {
+	mine.initRooms()
+	for _, item := range mine.rooms {
+		tmp := item.GetAreaBy(uid)
+		if tmp != nil {
+			return tmp
+		}
+	}
+	return nil
+}
+
+func (mine *SceneInfo) GetDevices(arr []string) ([]*AreaInfo, error) {
+	all, err := nosql.GetAreasByOwner(mine.UID)
 	if err != nil {
 		return nil, err
 	}
-	list := make([]*DeviceInfo, 0, len(all))
-	for _, device := range all {
-		if tool.HasItem(arr, device.SN) {
-			info := new(DeviceInfo)
-			info.initInfo(device)
+	list := make([]*AreaInfo, 0, len(all))
+	for _, item := range all {
+		if tool.HasItem(arr, item.SN) {
+			info := new(AreaInfo)
+			info.initInfo(item)
 			list = append(list, info)
 		}
 	}
 	return list, nil
 }
 
-func (mine *SceneInfo) GetDevicesByArea(area string) ([]*DeviceInfo, error) {
-	all, err := nosql.GetDevicesByArea(mine.UID, area)
-	if err != nil {
-		return nil, err
+func (mine *SceneInfo) GetDevicesByArea(area string) ([]*AreaInfo, error) {
+	tmp := mine.GetArea(area)
+	if tmp == nil {
+		return nil, errors.New("the area is null")
 	}
-	list := make([]*DeviceInfo, 0, len(all))
-	for _, device := range all {
-		info := new(DeviceInfo)
-		info.initInfo(device)
-		list = append(list, info)
-	}
+	list := make([]*AreaInfo, 0, 1)
+	list = append(list, tmp)
 	return list, nil
 }
 
-func (mine *SceneInfo) GetDevicesByRoom(room string) ([]*DeviceInfo, error) {
-	all, err := nosql.GetDevicesByRoom(mine.UID, room)
-	if err != nil {
-		return nil, err
+func (mine *SceneInfo) GetDevicesByRoom(room string) ([]*AreaInfo, error) {
+	tmp := mine.GetRoom(room)
+	if tmp == nil {
+		return nil, errors.New("the room is null")
 	}
-	list := make([]*DeviceInfo, 0, len(all))
-	for _, device := range all {
-		info := new(DeviceInfo)
-		info.initInfo(device)
-		list = append(list, info)
+	all := tmp.Areas()
+	list := make([]*AreaInfo, 0, len(all))
+	for _, item := range all {
+		if len(item.SN) > 2 {
+			list = append(list, item)
+		}
 	}
 	return list, nil
 }

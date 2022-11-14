@@ -166,6 +166,12 @@ func UpdateAreaQuestion(uid, question, operator string) error {
 	return err
 }
 
+func UpdateAreaDisplays(uid, operator string, displays []string) error {
+	msg := bson.M{"displays": displays, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableArea, uid, msg)
+	return err
+}
+
 func RemoveArea(uid, operator string) error {
 	_, err := removeOne(TableArea, uid, operator)
 	return err

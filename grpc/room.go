@@ -261,13 +261,12 @@ func (mine *RoomService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateFil
 	}
 	var err error
 	if in.Key == "device.question" {
-		device := scene.GetDevice(in.Uid)
+		device := scene.GetAreaBySN(in.Uid)
 		if device == nil {
 			err = errors.New("not found the device that sn = " + in.Uid)
 		} else {
 			err = device.UpdateQuestion(in.Value, in.Operator)
 		}
-
 	} else {
 		err = errors.New("not defined the key")
 	}
@@ -323,12 +322,12 @@ func (mine *RoomService) SubtractDevice(ctx context.Context, in *pb.ReqRoomDevic
 		out.Status = outError(path, "the room not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	device, err := cache.Context().GetDevice(in.Device)
+	area, err := cache.Context().GetArea(in.Area)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
-	err = device.UpdateRoom("", "", in.Operator)
+	err = area.UpdateDevice("", in.Operator, 0)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -350,7 +349,7 @@ func (mine *RoomService) GetDevices(ctx context.Context, in *pb.RequestFilter, o
 		out.Status = outError(path, "the scene not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	var list []*cache.DeviceInfo
+	var list []*cache.AreaInfo
 	var err error
 	if in.Key == "devices" {
 		list, err = info.GetDevices(in.List)
@@ -367,9 +366,9 @@ func (mine *RoomService) GetDevices(ctx context.Context, in *pb.RequestFilter, o
 		return nil
 	}
 	out.List = make([]*pb.ProductInfo, 0, len(list))
-	for _, device := range list {
-		tmp := &pb.ProductInfo{Uid: device.SN, Room: device.Room, Area: device.Area, Type: device.Type, Remark: device.Remark}
-		tmp.Displays = cache.Context().SwitchDisplays(device.Type, device.Displays)
+	for _, item := range list {
+		tmp := &pb.ProductInfo{Uid: item.SN, Room: item.Parent, Area: item.UID, Type: item.Type, Remark: item.Remark}
+		tmp.Displays = cache.Context().SwitchDisplays(item.Type, item.Displays)
 		out.List = append(out.List, tmp)
 	}
 	out.Status = outLog(path, out)
