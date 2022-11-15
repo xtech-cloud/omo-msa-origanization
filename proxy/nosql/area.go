@@ -56,7 +56,7 @@ func GetArea(uid string) (*Area, error) {
 }
 
 func GetAreasByOwner(owner string) ([]*Area, error) {
-	msg := bson.M{"owner": owner, "deletedAt": new(time.Time)}
+	msg := bson.M{"scene": owner, "deletedAt": new(time.Time)}
 	cursor, err1 := findMany(TableArea, msg, 0)
 	if err1 != nil {
 		return nil, err1
@@ -94,7 +94,7 @@ func GetAreasByParent(parent string) ([]*Area, error) {
 }
 
 func GetAreasBy(owner, parent string) ([]*Area, error) {
-	msg := bson.M{"parent": parent, "deletedAt": new(time.Time)}
+	msg := bson.M{"scene": owner, "parent": parent, "deletedAt": new(time.Time)}
 	cursor, err1 := findMany(TableArea, msg, 0)
 	if err1 != nil {
 		return nil, err1
