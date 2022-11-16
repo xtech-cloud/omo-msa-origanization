@@ -160,15 +160,15 @@ func (mine *RoomInfo) HadQuotes(quotes []string) bool {
 	return false
 }
 
-func (mine *RoomInfo) UpdateDisplays(sn, group, operator string, showing bool, displays []string) error {
-	area := mine.GetArea(sn)
-	if area == nil {
+func (mine *RoomInfo) UpdateDisplays(area, operator string, displays []string) error {
+	info := mine.GetAreaBySN(area)
+	if info == nil {
 		return errors.New("the device had not found by sn")
 	}
 	if displays == nil {
 		displays = make([]string, 0, 1)
 	}
-	return area.UpdateShowings(operator, displays)
+	return info.UpdateDisplays(operator, displays)
 }
 
 func (mine *RoomInfo) HadDevice(sn string) bool {
@@ -195,14 +195,13 @@ func (mine *RoomInfo) Products() []*pb.ProductInfo {
 	array := mine.Areas()
 	list := make([]*pb.ProductInfo, 0, len(array))
 	for _, item := range array {
-		tmp := &pb.ProductInfo{Uid: item.SN, Room: mine.UID, Area: item.UID, Type: item.Type, Remark: item.Remark, Question: item.Question}
-		tmp.Displays = cacheCtx.SwitchDisplays(item.Type, item.Displays)
+		tmp := SwitchAreaToProduct(item)
 		list = append(list, tmp)
 	}
 	return list
 }
 
-func (mine *cacheContext) SwitchDisplays(tp uint32, arr []string) []*pb.DisplayInfo {
+func (mine *cacheContext) switchDisplays(tp uint32, arr []string) []*pb.DisplayInfo {
 	list := make([]*pb.DisplayInfo, 0, 10)
 	tmp := new(pb.DisplayInfo)
 	tmp.Group = ""
@@ -219,7 +218,7 @@ func (mine *cacheContext) SwitchDisplays(tp uint32, arr []string) []*pb.DisplayI
 	return list
 }
 
-func (mine *RoomInfo) GetArea(sn string) *AreaInfo {
+func (mine *RoomInfo) GetAreaBySN(sn string) *AreaInfo {
 	areas := mine.Areas()
 	for _, item := range areas {
 		if item.SN == sn {
@@ -238,16 +237,6 @@ func (mine *RoomInfo) GetAreaBy(uid string) *AreaInfo {
 	}
 	return nil
 }
-
-//func (mine *RoomInfo)GetPrepareDisplays(tp uint32) []*proxy.DisplayInfo {
-//	list := make([]*proxy.DisplayInfo, 0, 3)
-//	for _, item := range mine.displays {
-//		if item.Type == tp {
-//			list = append(list, item)
-//		}
-//	}
-//	return list
-//}
 
 func (mine *RoomInfo) AppendDevice(area, device, remark, operator string, tp uint32) error {
 	if mine.HadDevice(device) {

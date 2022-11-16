@@ -236,7 +236,7 @@ func (mine *RoomService) UpdateDisplays(ctx context.Context, in *pb.ReqRoomDispl
 			out.Status = outError(path, "the room not found ", pbstatus.ResultStatus_NotExisted)
 			return nil
 		}
-		err := info.UpdateDisplays(room.Sn, room.Group, in.Operator, room.Showing, room.List)
+		err := info.UpdateDisplays(room.Area, in.Operator, room.List)
 		if err != nil {
 			out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 			return nil
@@ -367,8 +367,7 @@ func (mine *RoomService) GetDevices(ctx context.Context, in *pb.RequestFilter, o
 	}
 	out.List = make([]*pb.ProductInfo, 0, len(list))
 	for _, item := range list {
-		tmp := &pb.ProductInfo{Uid: item.SN, Room: item.Parent, Area: item.UID, Type: item.Type, Remark: item.Remark}
-		tmp.Displays = cache.Context().SwitchDisplays(item.Type, item.Displays)
+		tmp := cache.SwitchAreaToProduct(item)
 		out.List = append(out.List, tmp)
 	}
 	out.Status = outLog(path, out)

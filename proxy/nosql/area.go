@@ -26,7 +26,7 @@ type Area struct {
 	Height   int32    `json:"height" bson:"height"`
 	SN       string   `json:"sn" bson:"sn"`
 	Question string   `json:"question" bson:"question"`
-	Displays []string `json:"displays" bson:"displays"`
+	Displays []string `json:"displays" bson:"displays"` // 正在设备展览的列表
 }
 
 func CreateArea(info *Area) error {

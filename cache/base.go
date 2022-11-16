@@ -2,6 +2,7 @@ package cache
 
 import (
 	"github.com/micro/go-micro/v2/logger"
+	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"omo.msa.organization/config"
 	"omo.msa.organization/proxy/nosql"
 	"reflect"
@@ -75,4 +76,16 @@ func checkPage(page, number uint32, all interface{}) (uint32, uint32, interface{
 
 	list := array.Slice(int(start), int(end))
 	return total, maxPage, list.Interface()
+}
+
+func SwitchAreaToProduct(info *AreaInfo) *pb.ProductInfo {
+	tmp := new(pb.ProductInfo)
+	tmp.Sn = info.SN
+	tmp.Room = info.Parent
+	tmp.Template = info.Template
+	tmp.Area = info.UID
+	tmp.Type = info.Type
+	tmp.Remark = info.Remark
+	tmp.Displays = Context().switchDisplays(info.Type, info.Displays)
+	return tmp
 }

@@ -766,7 +766,7 @@ func (mine *SceneInfo) GetRoomsByDevice(sn string) []*RoomInfo {
 func (mine *SceneInfo) GetAreaBySN(sn string) *AreaInfo {
 	mine.initRooms()
 	for _, item := range mine.rooms {
-		tmp := item.GetArea(sn)
+		tmp := item.GetAreaBySN(sn)
 		if tmp != nil {
 			return tmp
 		}

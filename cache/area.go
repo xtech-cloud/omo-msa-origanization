@@ -154,7 +154,7 @@ func (mine *AreaInfo) UpdateDevice(sn, operator string, tp uint32) error {
 	return err
 }
 
-func (mine *AreaInfo) UpdateShowings(operator string, list []string) error {
+func (mine *AreaInfo) UpdateDisplays(operator string, list []string) error {
 	err := nosql.UpdateAreaDisplays(mine.UID, operator, list)
 	if err == nil {
 		mine.Displays = list

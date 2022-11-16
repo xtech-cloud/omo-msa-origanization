@@ -36,7 +36,7 @@ func switchScene(info *cache.SceneInfo) *pb.SceneInfo {
 	tmp.Members = info.AllMembers()
 	tmp.Domains = make([]*pb.ProductInfo, 0, len(info.Domains))
 	for _, domain := range info.Domains {
-		tmp.Domains = append(tmp.Domains, &pb.ProductInfo{Type: uint32(domain.Type), Uid: domain.UID,
+		tmp.Domains = append(tmp.Domains, &pb.ProductInfo{Type: uint32(domain.Type), Sn: domain.UID,
 			Remark: domain.Remark, Keywords: domain.Keywords, Name: domain.Name})
 	}
 	return tmp
@@ -346,7 +346,7 @@ func (mine *SceneService) UpdateDomains(ctx context.Context, in *pb.ReqSceneDoma
 	}
 	arr := make([]proxy.DomainInfo, 0, len(in.List))
 	for _, item := range in.List {
-		arr = append(arr, proxy.DomainInfo{Type: uint8(item.Type), UID: item.Uid, Remark: item.Remark, Keywords: item.Keywords, Name: item.Name})
+		arr = append(arr, proxy.DomainInfo{Type: uint8(item.Type), UID: item.Sn, Remark: item.Remark, Keywords: item.Keywords, Name: item.Name})
 	}
 	err := info.UpdateDomains(in.Operator, arr)
 	if err != nil {
