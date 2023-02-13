@@ -15,16 +15,15 @@ type Device struct {
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
 
-	Creator  string   `json:"creator" bson:"creator"`
-	Operator string   `json:"operator" bson:"operator"`
-	Scene    string   `json:"scene" bson:"scene"`       // 所属场景
-	Room     string   `json:"room" bson:"room"`         //所属房间
-	Area     string   `json:"area" bson:"area"`         //属于区域
-	Remark   string   `json:"remark" bson:"remark"`     //
-	Type     uint32   `json:"type" bson:"type"`         //产品类型
-	SN       string   `json:"sn" bson:"sn"`             //设备SN
-	Question string   `json:"question" bson:"question"` //关联的答题
-	Displays []string `json:"displays" bson:"displays"`
+	Creator     string `json:"creator" bson:"creator"`
+	Operator    string `json:"operator" bson:"operator"`
+	Scene       string `json:"scene" bson:"scene"`             // 所属场景
+	Remark      string `json:"remark" bson:"remark"`           //备注
+	SN          string `json:"sn" bson:"sn"`                   //设备SN
+	OS          string `json:"os" bson:"os"`                   //操作系统
+	Running     uint32 `json:"running" bson:"running"`         //运行时长
+	Quote       string `json:"quote" bson:"quote"`             //
+	Certificate string `json:"certificate" bson:"certificate"` //激活证书
 }
 
 func CreateDevice(info *Device) error {
@@ -112,60 +111,26 @@ func GetDevicesByScene(scene string) ([]*Device, error) {
 	return items, nil
 }
 
-func GetDevicesByArea(scene, area string) ([]*Device, error) {
-	cursor, err1 := findMany(TableDevice, bson.M{"scene": scene, "area": area, "deleteAt": new(time.Time)}, 0)
-	if err1 != nil {
-		return nil, err1
-	}
-	var items = make([]*Device, 0, 20)
-	for cursor.Next(context.Background()) {
-		var node = new(Device)
-		if err := cursor.Decode(node); err != nil {
-			return nil, err
-		} else {
-			items = append(items, node)
-		}
-	}
-	return items, nil
-}
-
-func GetDevicesByRoom(scene, room string) ([]*Device, error) {
-	cursor, err1 := findMany(TableDevice, bson.M{"scene": scene, "room": room, "deleteAt": new(time.Time)}, 0)
-	if err1 != nil {
-		return nil, err1
-	}
-	var items = make([]*Device, 0, 20)
-	for cursor.Next(context.Background()) {
-		var node = new(Device)
-		if err := cursor.Decode(node); err != nil {
-			return nil, err
-		} else {
-			items = append(items, node)
-		}
-	}
-	return items, nil
-}
-
 func UpdateDeviceBase(uid, name, remark, operator string) error {
 	msg := bson.M{"name": name, "remark": remark, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }
 
-func UpdateDeviceRoom(uid, room, area, operator string) error {
-	msg := bson.M{"room": room, "area": area, "operator": operator, "updatedAt": time.Now()}
+func UpdateDeviceLength(uid, operator string, len uint32) error {
+	msg := bson.M{"running": len, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }
 
-func UpdateDeviceQuestion(uid, question, operator string) error {
-	msg := bson.M{"question": question, "operator": operator, "updatedAt": time.Now()}
+func UpdateDeviceCertificate(uid, data, operator string) error {
+	msg := bson.M{"certificate": data, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }
 
-func UpdateDeviceDisplays(uid, operator string, displays []string) error {
-	msg := bson.M{"displays": displays, "operator": operator, "updatedAt": time.Now()}
+func UpdateDeviceScene(uid, data, operator string) error {
+	msg := bson.M{"scene": data, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }
