@@ -13,10 +13,10 @@ type AreaInfo struct {
 	Owner    string
 	Parent   string
 	Template string //产品配置模板
-	Type     uint32
+	Type     uint32 //产品类型
 	Width    int32
 	Height   int32
-	SN       string
+	Device   string
 	Question string
 	Displays []string
 }
@@ -35,7 +35,7 @@ func (mine *cacheContext) CreateArea(name, remark, owner, parent, operator strin
 	db.Width = 0
 	db.Height = 0
 	db.Template = ""
-	db.SN = ""
+	db.Device = ""
 	db.Question = ""
 	db.Displays = make([]string, 0, 1)
 
@@ -120,7 +120,7 @@ func (mine *AreaInfo) initInfo(db *nosql.Area) {
 	mine.Width = db.Width
 	mine.Height = db.Height
 	mine.Type = db.Type
-	mine.SN = db.SN
+	mine.Device = db.Device
 	mine.Question = db.Question
 	mine.Displays = db.Displays
 }
@@ -147,7 +147,7 @@ func (mine *AreaInfo) UpdateTemplate(template, operator string) error {
 func (mine *AreaInfo) UpdateDevice(sn, operator string, tp uint32) error {
 	err := nosql.UpdateAreaDevice(mine.UID, sn, operator, tp)
 	if err == nil {
-		mine.SN = sn
+		mine.Device = sn
 		mine.Type = tp
 		mine.Operator = operator
 	}
@@ -163,10 +163,10 @@ func (mine *AreaInfo) UpdateDisplays(operator string, list []string) error {
 	return err
 }
 
-func (mine *AreaInfo) UpdateSN(sn, operator string) error {
-	err := nosql.UpdateAreaSN(mine.UID, sn, operator)
+func (mine *AreaInfo) UpdateDevice2(sn, operator string) error {
+	err := nosql.UpdateAreaDevice2(mine.UID, sn, operator)
 	if err == nil {
-		mine.SN = sn
+		mine.Device = sn
 		mine.Operator = operator
 	}
 	return err

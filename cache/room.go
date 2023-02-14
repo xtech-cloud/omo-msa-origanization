@@ -174,7 +174,7 @@ func (mine *RoomInfo) UpdateDisplays(area, operator string, displays []string) e
 func (mine *RoomInfo) HadDevice(sn string) bool {
 	areas := mine.Areas()
 	for _, item := range areas {
-		if item.SN == sn {
+		if item.Device == sn {
 			return true
 		}
 	}
@@ -221,7 +221,7 @@ func (mine *cacheContext) switchDisplays(tp uint32, arr []string) []*pb.DisplayI
 func (mine *RoomInfo) GetAreaBySN(sn string) *AreaInfo {
 	areas := mine.Areas()
 	for _, item := range areas {
-		if item.SN == sn {
+		if item.Device == sn {
 			return item
 		}
 	}

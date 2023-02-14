@@ -27,7 +27,7 @@ func switchArea(info *cache.AreaInfo) *pb.AreaInfo {
 	tmp.Type = info.Type
 	tmp.Template = info.Template
 	tmp.Question = info.Question
-	tmp.Sn = info.SN
+	tmp.Sn = info.Device
 	tmp.Displays = info.Displays
 	return tmp
 }
@@ -173,7 +173,7 @@ func (mine *AreaService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateFil
 	if in.Key == "question" {
 		err = info.UpdateQuestion(in.Value, in.Operator)
 	} else if in.Key == "sn" {
-		err = info.UpdateSN(in.Value, in.Operator)
+		err = info.UpdateDevice2(in.Value, in.Operator)
 	} else if in.Key == "template" {
 		err = info.UpdateTemplate(in.Value, in.Operator)
 	} else if in.Key == "device" {

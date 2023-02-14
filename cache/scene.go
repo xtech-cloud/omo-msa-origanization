@@ -792,7 +792,7 @@ func (mine *SceneInfo) GetDevices(arr []string) ([]*AreaInfo, error) {
 	}
 	list := make([]*AreaInfo, 0, len(all))
 	for _, item := range all {
-		if tool.HasItem(arr, item.SN) {
+		if tool.HasItem(arr, item.Device) {
 			info := new(AreaInfo)
 			info.initInfo(item)
 			list = append(list, info)
@@ -819,7 +819,7 @@ func (mine *SceneInfo) GetDevicesByRoom(room string) ([]*AreaInfo, error) {
 	all := tmp.Areas()
 	list := make([]*AreaInfo, 0, len(all))
 	for _, item := range all {
-		if len(item.SN) > 2 {
+		if len(item.Device) > 2 {
 			list = append(list, item)
 		}
 	}
