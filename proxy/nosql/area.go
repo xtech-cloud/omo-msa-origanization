@@ -26,6 +26,7 @@ type Area struct {
 	Height   int32    `json:"height" bson:"height"`
 	Device   string   `json:"device" bson:"device"`
 	Question string   `json:"question" bson:"question"`
+	Catalog  string   `json:"catalog" bson:"catalog"`
 	Displays []string `json:"displays" bson:"displays"` // 正在设备展览的列表
 }
 
@@ -144,6 +145,12 @@ func UpdateAreaTemplate(uid, template, operator string) error {
 
 func UpdateAreaDevice(uid, device, operator string, tp uint32) error {
 	msg := bson.M{"device": device, "type": tp, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableArea, uid, msg)
+	return err
+}
+
+func UpdateAreaCatalog(uid, catalog, operator string) error {
+	msg := bson.M{"catalog": catalog, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableArea, uid, msg)
 	return err
 }

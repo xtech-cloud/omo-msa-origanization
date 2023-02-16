@@ -17,9 +17,11 @@ type Device struct {
 
 	Creator     string `json:"creator" bson:"creator"`
 	Operator    string `json:"operator" bson:"operator"`
-	Scene       string `json:"scene" bson:"scene"`             // 所属场景
+	Scene       string `json:"scene" bson:"scene"` // 所属场景
+	Type        uint8  `json:"type" bson:"type"`   //类型
+	Status      uint8  `json:"status" bson:"status"`
 	Remark      string `json:"remark" bson:"remark"`           //备注
-	SN          string `json:"sn" bson:"sn"`                   //设备SN
+	SN          string `json:"sn" bson:"sn"`                   //设备SN或者邀请码
 	OS          string `json:"os" bson:"os"`                   //操作系统
 	Running     uint32 `json:"running" bson:"running"`         //运行时长
 	Quote       string `json:"quote" bson:"quote"`             //
@@ -47,6 +49,19 @@ func GetDeviceCount() int64 {
 func GetDeviceBySN(sn string) (*Device, error) {
 	msg := bson.M{"sn": sn}
 	result, err := findOneBy(TableDevice, msg)
+	if err != nil {
+		return nil, err
+	}
+	model := new(Device)
+	err1 := result.Decode(model)
+	if err1 != nil {
+		return nil, err1
+	}
+	return model, nil
+}
+
+func GetDevice(uid string) (*Device, error) {
+	result, err := findOne(TableDevice, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +126,23 @@ func GetDevicesByScene(scene string) ([]*Device, error) {
 	return items, nil
 }
 
+func GetDevicesByStatus(st uint8) ([]*Device, error) {
+	cursor, err1 := findMany(TableDevice, bson.M{"status": st, "deleteAt": new(time.Time)}, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Device, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Device)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func UpdateDeviceBase(uid, name, remark, operator string) error {
 	msg := bson.M{"name": name, "remark": remark, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
@@ -129,8 +161,20 @@ func UpdateDeviceCertificate(uid, data, operator string) error {
 	return err
 }
 
-func UpdateDeviceScene(uid, data, operator string) error {
-	msg := bson.M{"scene": data, "operator": operator, "updatedAt": time.Now()}
+func UpdateDeviceScene(uid, data, operator string, st uint8) error {
+	msg := bson.M{"scene": data, "status": st, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableDevice, uid, msg)
+	return err
+}
+
+func UpdateDeviceQuote(uid, data, operator string, st uint8) error {
+	msg := bson.M{"quote": data, "status": st, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableDevice, uid, msg)
+	return err
+}
+
+func UpdateDeviceCode(uid, code, operator string) error {
+	msg := bson.M{"sn": code, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }

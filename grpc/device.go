@@ -26,6 +26,7 @@ func switchDevice(info *cache.DeviceInfo) *pb.DeviceInfo {
 	tmp.Quote = info.Quote
 	tmp.Running = info.RunningTime
 	tmp.Certificate = info.Certificate
+	tmp.Type = uint32(info.Type)
 	return tmp
 }
 
@@ -37,7 +38,13 @@ func (mine *DeviceService) AddOne(ctx context.Context, in *pb.ReqDeviceAdd, out 
 		return nil
 	}
 
-	info, err := cache.Context().CreateDevice(in.Owner, in.Name, in.Sn, in.Remark, in.Os, in.Quote, in.Operator)
+	tmp, _ := cache.Context().GetDeviceBySN(in.Sn)
+	if tmp != nil {
+		out.Status = outError(path, "the sn is repeated ", pbstatus.ResultStatus_Repeated)
+		return nil
+	}
+
+	info, err := cache.Context().CreateDevice(in.Owner, in.Name, in.Sn, in.Remark, in.Os, in.Quote, in.Operator, 0)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -54,7 +61,14 @@ func (mine *DeviceService) GetOne(ctx context.Context, in *pb.RequestInfo, out *
 		out.Status = outError(path, "the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
-	info, er := cache.Context().GetDevice(in.Uid)
+	var info *cache.DeviceInfo
+	var er error
+	if in.Operator == "sn" {
+		info, er = cache.Context().GetDeviceBySN(in.Uid)
+	} else {
+		info, er = cache.Context().GetDevice(in.Uid)
+	}
+
 	if er != nil {
 		out.Status = outError(path, "the device not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -112,16 +126,22 @@ func (mine *DeviceService) GetListByFilter(ctx context.Context, in *pb.RequestFi
 	var list []*cache.DeviceInfo
 	var err error
 	if in.Scene == "" {
-		out.Status = outError(path, "the scene is empty", pbstatus.ResultStatus_Empty)
-		return nil
-	}
-	if in.Key == "" {
-		list, err = cache.Context().GetDevicesByOwner(in.Scene)
-	} else if in.Key == "type" {
-
+		if in.Key == "status" {
+			st := parseInt(in.Value)
+			list, err = cache.Context().GetDevicesByStatus(uint8(st))
+		} else {
+			err = errors.New("the key not defined")
+		}
 	} else {
-		err = errors.New("the key not defined")
+		if in.Key == "" {
+			list, err = cache.Context().GetDevicesByOwner(in.Scene)
+		} else if in.Key == "type" {
+
+		} else {
+			err = errors.New("the key not defined")
+		}
 	}
+
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -178,6 +198,11 @@ func (mine *DeviceService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateF
 		err = info.UpdateCertificate(in.Value, in.Operator)
 	} else if in.Key == "scene" {
 		err = info.UpdateScene(in.Value, in.Operator)
+	} else if in.Key == "quote" {
+		err = info.UpdateQuote(in.Value, in.Operator)
+	} else if in.Key == "type" {
+		tp := parseInt(in.Value)
+		err = info.UpdateRunning(uint32(tp), in.Operator)
 	} else {
 		err = errors.New("the field not defined")
 	}

@@ -18,6 +18,7 @@ type AreaInfo struct {
 	Height   int32
 	Device   string
 	Question string
+	Catalog  string //终端定制目录base64加密
 	Displays []string
 }
 
@@ -37,6 +38,7 @@ func (mine *cacheContext) CreateArea(name, remark, owner, parent, operator strin
 	db.Template = ""
 	db.Device = ""
 	db.Question = ""
+	db.Catalog = ""
 	db.Displays = make([]string, 0, 1)
 
 	err := nosql.CreateArea(db)
@@ -121,6 +123,7 @@ func (mine *AreaInfo) initInfo(db *nosql.Area) {
 	mine.Height = db.Height
 	mine.Type = db.Type
 	mine.Device = db.Device
+	mine.Catalog = db.Catalog
 	mine.Question = db.Question
 	mine.Displays = db.Displays
 }
@@ -176,6 +179,15 @@ func (mine *AreaInfo) UpdateType(tp uint32, operator string) error {
 	err := nosql.UpdateAreaType(mine.UID, operator, tp)
 	if err == nil {
 		mine.Type = tp
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *AreaInfo) UpdateCatalog(catalog, operator string) error {
+	err := nosql.UpdateAreaCatalog(mine.UID, catalog, operator)
+	if err == nil {
+		mine.Catalog = catalog
 		mine.Operator = operator
 	}
 	return err

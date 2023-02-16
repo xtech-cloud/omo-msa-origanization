@@ -29,6 +29,7 @@ func switchArea(info *cache.AreaInfo) *pb.AreaInfo {
 	tmp.Question = info.Question
 	tmp.Sn = info.Device
 	tmp.Displays = info.Displays
+	tmp.Catalog = info.Catalog
 	return tmp
 }
 
@@ -188,6 +189,8 @@ func (mine *AreaService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateFil
 	} else if in.Key == "type" {
 		tp := parseInt(in.Value)
 		err = info.UpdateType(uint32(tp), in.Operator)
+	} else if in.Key == "catalog" {
+		err = info.UpdateCatalog(in.Value, in.Operator)
 	} else {
 		err = errors.New("the field not defined")
 	}
