@@ -23,7 +23,8 @@ type Device struct {
 	Remark      string `json:"remark" bson:"remark"`           //备注
 	SN          string `json:"sn" bson:"sn"`                   //设备SN或者邀请码
 	OS          string `json:"os" bson:"os"`                   //操作系统
-	Running     uint32 `json:"running" bson:"running"`         //运行时长
+	ExpiryTime  uint32 `json:"expiry" bson:"expiry"`           //有效时长
+	ActiveTime  int64  `json:"activated" bson:"activated"`     //激活时间
 	Quote       string `json:"quote" bson:"quote"`             //
 	Certificate string `json:"certificate" bson:"certificate"` //激活证书
 }
@@ -149,8 +150,8 @@ func UpdateDeviceBase(uid, name, remark, operator string) error {
 	return err
 }
 
-func UpdateDeviceLength(uid, operator string, len uint32) error {
-	msg := bson.M{"running": len, "operator": operator, "updatedAt": time.Now()}
+func UpdateDeviceTime(uid, operator string, act, expiry uint64) error {
+	msg := bson.M{"activated": act, "expiry": expiry, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }
@@ -167,14 +168,20 @@ func UpdateDeviceScene(uid, data, operator string, st uint8) error {
 	return err
 }
 
-func UpdateDeviceQuote(uid, data, operator string, st uint8) error {
-	msg := bson.M{"quote": data, "status": st, "operator": operator, "updatedAt": time.Now()}
+func BindDevice(uid, quote, os, operator string, st uint8, act, expiry uint64) error {
+	msg := bson.M{"quote": quote, "os": os, "status": st, "activated": act, "expiry": expiry, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }
 
 func UpdateDeviceCode(uid, code, operator string) error {
 	msg := bson.M{"sn": code, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableDevice, uid, msg)
+	return err
+}
+
+func UpdateDeviceType(uid, operator string, tp uint8) error {
+	msg := bson.M{"type": tp, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }

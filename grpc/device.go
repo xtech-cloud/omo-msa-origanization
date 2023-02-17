@@ -24,7 +24,9 @@ func switchDevice(info *cache.DeviceInfo) *pb.DeviceInfo {
 	tmp.Sn = info.SN
 	tmp.Owner = info.Scene
 	tmp.Quote = info.Quote
-	tmp.Running = info.RunningTime
+	tmp.Activated = info.ActiveTime
+	tmp.Expiry = info.Expired
+	tmp.Os = info.OS
 	tmp.Certificate = info.Certificate
 	tmp.Type = uint32(info.Type)
 	return tmp
@@ -44,7 +46,7 @@ func (mine *DeviceService) AddOne(ctx context.Context, in *pb.ReqDeviceAdd, out 
 		return nil
 	}
 
-	info, err := cache.Context().CreateDevice(in.Owner, in.Name, in.Sn, in.Remark, in.Os, in.Quote, in.Operator, 0)
+	info, err := cache.Context().CreateDevice(in.Owner, in.Name, in.Sn, in.Remark, in.Operator, uint8(in.Type))
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -84,6 +86,9 @@ func (mine *DeviceService) GetStatistic(ctx context.Context, in *pb.RequestFilte
 	if len(in.Key) < 1 {
 		out.Status = outError(path, "the user is empty ", pbstatus.ResultStatus_Empty)
 		return nil
+	}
+	if in.Key == "count" {
+		out.Count = uint32(cache.Context().GetDeviceCount())
 	}
 
 	out.Status = outLog(path, out)
@@ -191,21 +196,37 @@ func (mine *DeviceService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateF
 		return nil
 	}
 	var err error
-	if in.Key == "length" {
-		length := parseInt(in.Value)
-		err = info.UpdateLength(uint32(length), in.Operator)
-	} else if in.Key == "certificate" {
+	if in.Key == "certificate" {
 		err = info.UpdateCertificate(in.Value, in.Operator)
 	} else if in.Key == "scene" {
 		err = info.UpdateScene(in.Value, in.Operator)
-	} else if in.Key == "quote" {
-		err = info.UpdateQuote(in.Value, in.Operator)
 	} else if in.Key == "type" {
 		tp := parseInt(in.Value)
-		err = info.UpdateRunning(uint32(tp), in.Operator)
+		err = info.UpdateType(in.Operator, uint8(tp))
 	} else {
 		err = errors.New("the field not defined")
 	}
+	if err != nil {
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *DeviceService) Bind(ctx context.Context, in *pb.ReqDeviceBind, out *pb.ReplyInfo) error {
+	path := "device.bind"
+	inLog(path, in)
+	if len(in.Uid) < 1 {
+		out.Status = outError(path, "the uid is empty ", pbstatus.ResultStatus_Empty)
+		return nil
+	}
+	info, er := cache.Context().GetDevice(in.Uid)
+	if er != nil {
+		out.Status = outError(path, "the device not found ", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	err := info.Bind(in.Quote, in.Os, in.Operator, in.Activated, uint64(in.Expiry))
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil

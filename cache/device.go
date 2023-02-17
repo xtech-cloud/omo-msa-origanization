@@ -23,7 +23,8 @@ type DeviceInfo struct {
 	OS          string
 	Quote       string
 	SN          string //邀请码
-	RunningTime uint32 //运行时长
+	ActiveTime  int64  //激活时间
+	Expired     uint32 //有效时间
 	Certificate string //证书
 }
 
@@ -41,7 +42,8 @@ func (mine *DeviceInfo) initInfo(db *nosql.Device) {
 	mine.Quote = db.Quote
 	mine.SN = db.SN
 	mine.Type = db.Type
-	mine.RunningTime = db.Running
+	mine.ActiveTime = db.ActiveTime
+	mine.Expired = db.ExpiryTime
 	mine.Certificate = db.Certificate
 }
 
@@ -50,24 +52,6 @@ func (mine *DeviceInfo) UpdateBase(name, remark, operator string) error {
 	if err == nil {
 		mine.Name = name
 		mine.Remark = remark
-		mine.Operator = operator
-	}
-	return err
-}
-
-func (mine *DeviceInfo) UpdateLength(length uint32, operator string) error {
-	err := nosql.UpdateDeviceLength(mine.UID, operator, length)
-	if err == nil {
-		mine.RunningTime = length
-		mine.Operator = operator
-	}
-	return err
-}
-
-func (mine *DeviceInfo) UpdateRunning(length uint32, operator string) error {
-	err := nosql.UpdateDeviceLength(mine.UID, operator, length)
-	if err == nil {
-		mine.RunningTime = length
 		mine.Operator = operator
 	}
 	return err
@@ -92,11 +76,23 @@ func (mine *DeviceInfo) UpdateScene(data, operator string) error {
 	return err
 }
 
-func (mine *DeviceInfo) UpdateQuote(data, operator string) error {
-	err := nosql.UpdateDeviceQuote(mine.UID, data, operator, DeviceBind)
+func (mine *DeviceInfo) UpdateType(operator string, tp uint8) error {
+	err := nosql.UpdateDeviceType(mine.UID, operator, tp)
+	if err == nil {
+		mine.Type = tp
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *DeviceInfo) Bind(quote, os, operator string, act, expired uint64) error {
+	err := nosql.BindDevice(mine.UID, quote, os, operator, DeviceBind, act, expired)
 	if err == nil {
 		mine.Status = DeviceBind
-		mine.Quote = data
+		mine.Quote = quote
+		mine.OS = os
+		mine.ActiveTime = int64(act)
+		mine.Expired = uint32(expired)
 		mine.Operator = operator
 	}
 	return err
@@ -106,7 +102,7 @@ func (mine *DeviceInfo) Remove(operator string) error {
 	return nosql.RemoveDevice(mine.UID, operator)
 }
 
-func (mine *cacheContext) CreateDevice(scene, name, sn, remark, os, quote, operator string, tp uint8) (*DeviceInfo, error) {
+func (mine *cacheContext) CreateDevice(scene, name, sn, remark, operator string, tp uint8) (*DeviceInfo, error) {
 	db := new(nosql.Device)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetRoomNextID()
@@ -117,10 +113,11 @@ func (mine *cacheContext) CreateDevice(scene, name, sn, remark, os, quote, opera
 	db.Name = name
 	db.Remark = remark
 	db.Scene = scene
-	db.OS = os
+	db.OS = ""
 	db.SN = sn
-	db.Quote = quote
-	db.Running = 0
+	db.Quote = ""
+	db.ActiveTime = 0
+	db.ExpiryTime = 0
 	db.Certificate = ""
 	db.Type = tp
 	db.Status = DeviceIdle
@@ -141,6 +138,10 @@ func (mine *cacheContext) GetDevice(uid string) (*DeviceInfo, error) {
 	tmp := new(DeviceInfo)
 	tmp.initInfo(db)
 	return tmp, nil
+}
+
+func (mine *cacheContext) GetDeviceCount() int64 {
+	return nosql.GetDeviceCount()
 }
 
 func (mine *cacheContext) GetDeviceBySN(sn string) (*DeviceInfo, error) {
