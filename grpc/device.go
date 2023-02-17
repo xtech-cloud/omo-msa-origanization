@@ -221,9 +221,13 @@ func (mine *DeviceService) Bind(ctx context.Context, in *pb.ReqDeviceBind, out *
 		out.Status = outError(path, "the uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
-	info, er := cache.Context().GetDevice(in.Uid)
+	info, er := cache.Context().GetDeviceBySN(in.Uid)
 	if er != nil {
 		out.Status = outError(path, "the device not found ", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	if info.Status != cache.DeviceIdle {
+		out.Status = outError(path, "the device had bind ", pbstatus.ResultStatus_Prohibition)
 		return nil
 	}
 	err := info.Bind(in.Quote, in.Os, in.Operator, in.Activated, uint64(in.Expiry))
