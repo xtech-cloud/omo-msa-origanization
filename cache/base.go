@@ -86,6 +86,8 @@ func SwitchAreaToProduct(info *AreaInfo) *pb.ProductInfo {
 	tmp.Area = info.UID
 	tmp.Type = info.Type
 	tmp.Remark = info.Remark
+	tmp.Catalog = info.Catalog
+	tmp.Question = info.Question
 	tmp.Displays = Context().switchDisplays(info.Type, info.Displays)
 	return tmp
 }
