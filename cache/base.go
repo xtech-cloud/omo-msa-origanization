@@ -83,6 +83,7 @@ func SwitchAreaToProduct(info *AreaInfo) *pb.ProductInfo {
 	tmp.Sn = info.Device
 	tmp.Room = info.Parent
 	tmp.Template = info.Template
+	tmp.Name = info.Name
 	tmp.Area = info.UID
 	tmp.Type = info.Type
 	tmp.Remark = info.Remark
