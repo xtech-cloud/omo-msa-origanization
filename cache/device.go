@@ -81,9 +81,9 @@ func (mine *DeviceInfo) updateStatus(operator string) {
 	st := DeviceIdle
 	if len(mine.Scene) > 2 && len(mine.Quote) > 2 {
 		st = DeviceFill
-	} else if len(mine.Scene) > 2 {
+	} else if len(mine.Scene) > 2 && len(mine.Quote) < 2 {
 		st = DevicePend
-	} else if len(mine.Quote) > 2 {
+	} else if len(mine.Scene) < 2 && len(mine.Quote) > 2 {
 		st = DeviceBind
 	} else {
 		return
