@@ -162,20 +162,20 @@ func UpdateDeviceCertificate(uid, data, operator string) error {
 	return err
 }
 
-func UpdateDeviceScene(uid, data, operator string, st uint8) error {
-	msg := bson.M{"scene": data, "status": st, "operator": operator, "updatedAt": time.Now()}
+func UpdateDeviceScene(uid, data, operator string) error {
+	msg := bson.M{"scene": data, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }
 
-func BindDevice(uid, quote, os, operator string, st uint8, act, expiry uint64) error {
-	msg := bson.M{"quote": quote, "os": os, "status": st, "activated": act, "expiry": expiry, "operator": operator, "updatedAt": time.Now()}
+func BindDevice(uid, quote, os, operator string, act, expiry uint64) error {
+	msg := bson.M{"quote": quote, "os": os, "activated": act, "expiry": expiry, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }
 
-func UpdateDeviceCode(uid, code, operator string) error {
-	msg := bson.M{"sn": code, "operator": operator, "updatedAt": time.Now()}
+func UpdateDeviceStatus(uid, operator string, st uint8) error {
+	msg := bson.M{"status": st, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }

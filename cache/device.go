@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	DeviceIdle    = 0 //未绑定
-	DeviceBind    = 1 //已经绑定但未分配
-	DeviceFill    = 2 //已经绑定也分配了场景
-	DeviceDiscard = 3 //废弃
+	DeviceIdle    = 0  //未绑定
+	DeviceBind    = 1  //已经绑定但未分配
+	DeviceFill    = 2  //已经绑定也分配了场景
+	DevicePend    = 3  //已经分配但未绑定
+	DeviceDiscard = 99 //废弃
 )
 
 //邀请码
@@ -67,13 +68,30 @@ func (mine *DeviceInfo) UpdateCertificate(data, operator string) error {
 }
 
 func (mine *DeviceInfo) UpdateScene(data, operator string) error {
-	err := nosql.UpdateDeviceScene(mine.UID, data, operator, DeviceFill)
+	err := nosql.UpdateDeviceScene(mine.UID, data, operator)
 	if err == nil {
-		mine.Status = DeviceFill
 		mine.Scene = data
 		mine.Operator = operator
+		mine.updateStatus(operator)
 	}
 	return err
+}
+
+func (mine *DeviceInfo) updateStatus(operator string) {
+	st := DeviceIdle
+	if len(mine.Scene) > 2 && len(mine.SN) > 2 {
+		st = DeviceFill
+	} else if len(mine.Scene) > 2 {
+		st = DevicePend
+	} else if len(mine.SN) > 2 {
+		st = DeviceBind
+	} else {
+		return
+	}
+	er := nosql.UpdateDeviceStatus(mine.UID, operator, uint8(st))
+	if er == nil {
+		mine.Status = uint8(st)
+	}
 }
 
 func (mine *DeviceInfo) UpdateType(operator string, tp uint8) error {
@@ -86,20 +104,21 @@ func (mine *DeviceInfo) UpdateType(operator string, tp uint8) error {
 }
 
 func (mine *DeviceInfo) Bind(quote, os, operator string, act, expired uint64) error {
-	err := nosql.BindDevice(mine.UID, quote, os, operator, DeviceBind, act, expired)
+	err := nosql.BindDevice(mine.UID, quote, os, operator, act, expired)
 	if err == nil {
-		mine.Status = DeviceBind
 		mine.Quote = quote
 		mine.OS = os
 		mine.ActiveTime = int64(act)
 		mine.Expired = uint32(expired)
 		mine.Operator = operator
+		mine.updateStatus(operator)
 	}
 	return err
 }
 
 func (mine *DeviceInfo) Remove(operator string) error {
-	return nosql.RemoveDevice(mine.UID, operator)
+	//return nosql.RemoveDevice(mine.UID, operator)
+	return nosql.UpdateDeviceStatus(mine.UID, operator, DeviceDiscard)
 }
 
 func (mine *cacheContext) CreateDevice(scene, name, sn, remark, operator string, tp uint8) (*DeviceInfo, error) {
