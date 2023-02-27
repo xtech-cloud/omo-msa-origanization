@@ -161,7 +161,7 @@ func (mine *RoomInfo) HadQuotes(quotes []string) bool {
 }
 
 func (mine *RoomInfo) UpdateDisplays(area, operator string, displays []string) error {
-	info := mine.GetAreaBySN(area)
+	info := mine.GetAreaBy(area)
 	if info == nil {
 		return errors.New("the device had not found by sn")
 	}

@@ -27,7 +27,7 @@ func switchArea(info *cache.AreaInfo) *pb.AreaInfo {
 	tmp.Type = info.Type
 	tmp.Template = info.Template
 	tmp.Question = info.Question
-	tmp.Sn = info.Device
+	tmp.Device = info.Device
 	tmp.Displays = info.Displays
 	tmp.Catalog = info.Catalog
 	return tmp

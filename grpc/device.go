@@ -22,6 +22,7 @@ func switchDevice(info *cache.DeviceInfo) *pb.DeviceInfo {
 	tmp.Name = info.Name
 	tmp.Remark = info.Remark
 	tmp.Sn = info.SN
+	tmp.Status = uint32(info.Status)
 	tmp.Owner = info.Scene
 	tmp.Quote = info.Quote
 	tmp.Activated = info.ActiveTime
