@@ -91,6 +91,20 @@ func (mine *cacheContext) GetAreasByOwner(uid string) []*AreaInfo {
 	return list
 }
 
+func (mine *cacheContext) GetAreasByTemplate(owner, template string) []*AreaInfo {
+	array, err := nosql.GetAreasByTemplate(owner, template)
+	if err != nil {
+		return make([]*AreaInfo, 0, 0)
+	}
+	list := make([]*AreaInfo, 0, len(array))
+	for _, item := range array {
+		info := new(AreaInfo)
+		info.initInfo(item)
+		list = append(list, info)
+	}
+	return list
+}
+
 func (mine *cacheContext) GetAreaList(array []string) []*AreaInfo {
 	if array == nil || len(array) < 1 {
 		return make([]*AreaInfo, 0, 0)

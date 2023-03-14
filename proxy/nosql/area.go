@@ -75,6 +75,25 @@ func GetAreasByOwner(owner string) ([]*Area, error) {
 	return items, nil
 }
 
+func GetAreasByTemplate(owner, template string) ([]*Area, error) {
+	msg := bson.M{"scene": owner, "template": template, "deletedAt": new(time.Time)}
+	cursor, err1 := findMany(TableArea, msg, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	defer cursor.Close(context.Background())
+	var items = make([]*Area, 0, 50)
+	for cursor.Next(context.Background()) {
+		var node = new(Area)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func GetAreasByParent(parent string) ([]*Area, error) {
 	msg := bson.M{"parent": parent, "deletedAt": new(time.Time)}
 	cursor, err1 := findMany(TableArea, msg, 0)

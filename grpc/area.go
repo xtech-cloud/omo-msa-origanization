@@ -117,8 +117,8 @@ func (mine *AreaService) GetListByFilter(ctx context.Context, in *pb.RequestFilt
 	var err error
 	if in.Key == "" {
 		list = cache.Context().GetAreasByOwner(in.Scene)
-	} else if in.Key == "type" {
-
+	} else if in.Key == "template" {
+		list = cache.Context().GetAreasByTemplate(in.Scene, in.Value)
 	} else {
 		err = errors.New("the key not defined")
 	}
