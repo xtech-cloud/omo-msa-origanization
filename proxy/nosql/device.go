@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type Device struct {
+type Invite struct {
 	UID         primitive.ObjectID `bson:"_id"`
 	ID          uint64             `json:"id" bson:"id"`
 	Name        string             `json:"name" bson:"name"`
@@ -29,7 +29,7 @@ type Device struct {
 	Certificate string `json:"certificate" bson:"certificate"` //激活证书
 }
 
-func CreateDevice(info *Device) error {
+func CreateDevice(info *Invite) error {
 	_, err := insertOne(TableDevice, info)
 	if err != nil {
 		return err
@@ -47,13 +47,13 @@ func GetDeviceCount() int64 {
 	return num
 }
 
-func GetDeviceBySN(sn string) (*Device, error) {
+func GetDeviceBySN(sn string) (*Invite, error) {
 	msg := bson.M{"sn": sn}
 	result, err := findOneBy(TableDevice, msg)
 	if err != nil {
 		return nil, err
 	}
-	model := new(Device)
+	model := new(Invite)
 	err1 := result.Decode(model)
 	if err1 != nil {
 		return nil, err1
@@ -61,12 +61,12 @@ func GetDeviceBySN(sn string) (*Device, error) {
 	return model, nil
 }
 
-func GetDevice(uid string) (*Device, error) {
+func GetDevice(uid string) (*Invite, error) {
 	result, err := findOne(TableDevice, uid)
 	if err != nil {
 		return nil, err
 	}
-	model := new(Device)
+	model := new(Invite)
 	err1 := result.Decode(model)
 	if err1 != nil {
 		return nil, err1
@@ -74,13 +74,13 @@ func GetDevice(uid string) (*Device, error) {
 	return model, nil
 }
 
-func GetDeviceByID(id uint64) (*Device, error) {
+func GetDeviceByID(id uint64) (*Invite, error) {
 	msg := bson.M{"id": id}
 	result, err := findOneBy(TableDevice, msg)
 	if err != nil {
 		return nil, err
 	}
-	model := new(Device)
+	model := new(Invite)
 	err1 := result.Decode(model)
 	if err1 != nil {
 		return nil, err1
@@ -93,14 +93,14 @@ func RemoveDevice(uid, operator string) error {
 	return err
 }
 
-func GetAllDevices() ([]*Device, error) {
+func GetAllDevices() ([]*Invite, error) {
 	cursor, err1 := findAll(TableDevice, 0)
 	if err1 != nil {
 		return nil, err1
 	}
-	var items = make([]*Device, 0, 20)
+	var items = make([]*Invite, 0, 20)
 	for cursor.Next(context.Background()) {
-		var node = new(Device)
+		var node = new(Invite)
 		if err := cursor.Decode(node); err != nil {
 			return nil, err
 		} else {
@@ -110,14 +110,31 @@ func GetAllDevices() ([]*Device, error) {
 	return items, nil
 }
 
-func GetDevicesByScene(scene string) ([]*Device, error) {
+func GetAllDevicesExcept(st uint8) ([]*Invite, error) {
+	cursor, err1 := findMany(TableDevice, bson.M{"status": bson.M{"$ne": st}, "deleteAt": new(time.Time)}, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Invite, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Invite)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
+func GetDevicesByScene(scene string) ([]*Invite, error) {
 	cursor, err1 := findMany(TableDevice, bson.M{"scene": scene, "deleteAt": new(time.Time)}, 0)
 	if err1 != nil {
 		return nil, err1
 	}
-	var items = make([]*Device, 0, 20)
+	var items = make([]*Invite, 0, 20)
 	for cursor.Next(context.Background()) {
-		var node = new(Device)
+		var node = new(Invite)
 		if err := cursor.Decode(node); err != nil {
 			return nil, err
 		} else {
@@ -127,14 +144,14 @@ func GetDevicesByScene(scene string) ([]*Device, error) {
 	return items, nil
 }
 
-func GetDevicesByStatus(st uint8) ([]*Device, error) {
+func GetDevicesByStatus(st uint8) ([]*Invite, error) {
 	cursor, err1 := findMany(TableDevice, bson.M{"status": st, "deleteAt": new(time.Time)}, 0)
 	if err1 != nil {
 		return nil, err1
 	}
-	var items = make([]*Device, 0, 20)
+	var items = make([]*Invite, 0, 20)
 	for cursor.Next(context.Background()) {
-		var node = new(Device)
+		var node = new(Invite)
 		if err := cursor.Decode(node); err != nil {
 			return nil, err
 		} else {

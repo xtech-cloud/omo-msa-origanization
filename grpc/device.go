@@ -134,7 +134,7 @@ func (mine *DeviceService) GetListByFilter(ctx context.Context, in *pb.RequestFi
 	if in.Scene == "" {
 		if in.Key == "status" {
 			st := parseInt(in.Value)
-			list, err = cache.Context().GetDevicesByStatus(uint8(st))
+			list, err = cache.Context().GetDevicesByStatus(int32(st))
 		} else {
 			err = errors.New("the key not defined")
 		}

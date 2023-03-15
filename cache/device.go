@@ -29,7 +29,7 @@ type DeviceInfo struct {
 	Certificate string //证书
 }
 
-func (mine *DeviceInfo) initInfo(db *nosql.Device) {
+func (mine *DeviceInfo) initInfo(db *nosql.Invite) {
 	mine.UID = db.UID.Hex()
 	mine.ID = db.ID
 	mine.UpdateTime = db.UpdatedTime
@@ -122,7 +122,7 @@ func (mine *DeviceInfo) Remove(operator string) error {
 }
 
 func (mine *cacheContext) CreateDevice(scene, name, sn, remark, operator string, tp uint8) (*DeviceInfo, error) {
-	db := new(nosql.Device)
+	db := new(nosql.Invite)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetRoomNextID()
 	db.CreatedTime = time.Now()
@@ -188,8 +188,15 @@ func (mine *cacheContext) GetDevicesByOwner(owner string) ([]*DeviceInfo, error)
 	return list, nil
 }
 
-func (mine *cacheContext) GetDevicesByStatus(st uint8) ([]*DeviceInfo, error) {
-	dbs, err := nosql.GetDevicesByStatus(st)
+func (mine *cacheContext) GetDevicesByStatus(st int32) ([]*DeviceInfo, error) {
+	var dbs []*nosql.Invite
+	var err error
+	if st < 0 {
+		dbs, err = nosql.GetAllDevicesExcept(DeviceDiscard)
+	} else {
+		dbs, err = nosql.GetDevicesByStatus(uint8(st))
+	}
+
 	if err != nil {
 		return nil, err
 	}
