@@ -12,7 +12,7 @@ type Area struct {
 	ID          uint64             `json:"id" bson:"id"`
 	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
-	DeleteTime  time.Time          `json:"deletedAt" bson:"deletedAt"`
+	DeleteTime  time.Time          `json:"deletedAt" bson:"deleteAt"`
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
@@ -76,7 +76,7 @@ func GetAreasByOwner(owner string) ([]*Area, error) {
 }
 
 func GetAreasByTemplate(owner, template string) ([]*Area, error) {
-	msg := bson.M{"scene": owner, "template": template, "deletedAt": new(time.Time)}
+	msg := bson.M{"scene": owner, "template": template, "deleteAt": new(time.Time)}
 	cursor, err1 := findMany(TableArea, msg, 0)
 	if err1 != nil {
 		return nil, err1
@@ -95,7 +95,7 @@ func GetAreasByTemplate(owner, template string) ([]*Area, error) {
 }
 
 func GetAreasByParent(parent string) ([]*Area, error) {
-	msg := bson.M{"parent": parent, "deletedAt": new(time.Time)}
+	msg := bson.M{"parent": parent, "deleteAt": new(time.Time)}
 	cursor, err1 := findMany(TableArea, msg, 0)
 	if err1 != nil {
 		return nil, err1
@@ -114,7 +114,7 @@ func GetAreasByParent(parent string) ([]*Area, error) {
 }
 
 func GetAreasBy(owner, parent string) ([]*Area, error) {
-	msg := bson.M{"scene": owner, "parent": parent, "deletedAt": new(time.Time)}
+	msg := bson.M{"scene": owner, "parent": parent, "deleteAt": new(time.Time)}
 	cursor, err1 := findMany(TableArea, msg, 0)
 	if err1 != nil {
 		return nil, err1
