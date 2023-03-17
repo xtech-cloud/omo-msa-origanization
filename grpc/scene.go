@@ -3,10 +3,10 @@ package grpc
 import (
 	"context"
 	"errors"
+	"fmt"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.organization/cache"
-	"omo.msa.organization/proxy"
 	"strconv"
 )
 
@@ -29,16 +29,16 @@ func switchScene(info *cache.SceneInfo) *pb.SceneInfo {
 	tmp.Operator = info.Operator
 	tmp.Creator = info.Creator
 	tmp.Supporter = info.Supporter
-	tmp.Bucket = info.Bucket
+	//tmp.Bucket = info.Bucket
 	tmp.Short = info.ShortName
 	tmp.Questions = info.Questions
 	tmp.Parents = info.Parents()
 	tmp.Members = info.AllMembers()
-	tmp.Domains = make([]*pb.ProductInfo, 0, len(info.Domains))
-	for _, domain := range info.Domains {
-		tmp.Domains = append(tmp.Domains, &pb.ProductInfo{Type: uint32(domain.Type), Sn: domain.UID,
-			Remark: domain.Remark, Keywords: domain.Keywords, Name: domain.Name})
-	}
+	//tmp.Domains = make([]*pb.ProductInfo, 0, len(info.Domains))
+	//for _, domain := range info.Domains {
+	//	tmp.Domains = append(tmp.Domains, &pb.ProductInfo{Type: uint32(domain.Type), Sn: domain.UID,
+	//		Remark: domain.Remark, Keywords: domain.Keywords, Name: domain.Name})
+	//}
 	return tmp
 }
 
@@ -152,10 +152,7 @@ func (mine *SceneService) GetList(ctx context.Context, in *pb.RequestPage, out *
 	out.PageNow = in.Page
 	out.Total = total
 	out.PageMax = max
-	out.Status = &pb.ReplyStatus{
-		Code:  0,
-		Error: "",
-	}
+	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
 }
 
@@ -178,6 +175,14 @@ func (mine *SceneService) GetByFilter(ctx context.Context, in *pb.RequestFilter,
 		total, max, list = cache.Context().GetScenesByParent(in.Value, in.Page, in.Number)
 	} else if in.Key == "array" {
 		list = cache.Context().GetScenesByArray(in.List)
+	} else if in.Key == "sn" {
+		one, er := cache.Context().GetSceneBySN(in.Value)
+		if er != nil {
+			out.Status = outError(path, "not found the scene by sn", pbstatus.ResultStatus_NotExisted)
+			return nil
+		}
+		list = make([]*cache.SceneInfo, 0, 1)
+		list = append(list, one)
 	} else {
 		list = make([]*cache.SceneInfo, 0, 1)
 	}
@@ -189,10 +194,7 @@ func (mine *SceneService) GetByFilter(ctx context.Context, in *pb.RequestFilter,
 	out.PageNow = in.Page
 	out.Total = total
 	out.PageMax = max
-	out.Status = &pb.ReplyStatus{
-		Code:  0,
-		Error: "",
-	}
+	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
 }
 
@@ -339,20 +341,20 @@ func (mine *SceneService) UpdateDomains(ctx context.Context, in *pb.ReqSceneDoma
 		out.Status = outError(path, "the scene uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
-	info := cache.Context().GetScene(in.Uid)
-	if info == nil {
-		out.Status = outError(path, "the scene not found ", pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
-	arr := make([]proxy.DomainInfo, 0, len(in.List))
-	for _, item := range in.List {
-		arr = append(arr, proxy.DomainInfo{Type: uint8(item.Type), UID: item.Sn, Remark: item.Remark, Keywords: item.Keywords, Name: item.Name})
-	}
-	err := info.UpdateDomains(in.Operator, arr)
-	if err != nil {
-		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
-		return nil
-	}
+	//info := cache.Context().GetScene(in.Uid)
+	//if info == nil {
+	//	out.Status = outError(path, "the scene not found ", pbstatus.ResultStatus_NotExisted)
+	//	return nil
+	//}
+	//arr := make([]proxy.DomainInfo, 0, len(in.List))
+	//for _, item := range in.List {
+	//	arr = append(arr, proxy.DomainInfo{Type: uint8(item.Type), UID: item.Sn, Remark: item.Remark, Keywords: item.Keywords, Name: item.Name})
+	//}
+	//err := info.UpdateDomains(in.Operator, arr)
+	//if err != nil {
+	//	out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+	//	return nil
+	//}
 	out.Status = outLog(path, out)
 	return nil
 }
@@ -368,17 +370,17 @@ func (mine *SceneService) UpdateBucket(ctx context.Context, in *pb.RequestFlag, 
 		out.Status = outError(path, "the scene uid is empty ", pbstatus.ResultStatus_Empty)
 		return nil
 	}
-	info := cache.Context().GetScene(in.Uid)
-	if info == nil {
-		out.Status = outError(path, "the scene not found ", pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
-
-	err := info.UpdateBucket(in.Flag, in.Operator)
-	if err != nil {
-		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
-		return nil
-	}
+	//info := cache.Context().GetScene(in.Uid)
+	//if info == nil {
+	//	out.Status = outError(path, "the scene not found ", pbstatus.ResultStatus_NotExisted)
+	//	return nil
+	//}
+	//
+	//err := info.UpdateBucket(in.Flag, in.Operator)
+	//if err != nil {
+	//	out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+	//	return nil
+	//}
 	out.Status = outLog(path, out)
 	return nil
 }

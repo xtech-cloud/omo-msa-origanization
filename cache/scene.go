@@ -4,7 +4,6 @@ import (
 	"errors"
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"omo.msa.organization/proxy"
 	"omo.msa.organization/proxy/nosql"
 	"omo.msa.organization/tool"
 	"time"
@@ -39,15 +38,15 @@ type SceneInfo struct {
 	Master    string
 	Entity    string
 	Supporter string
-	Bucket    string
+	//Bucket    string
 	ShortName string
 	Address   nosql.AddressInfo
 	members   []string
 	parents   []string
 	Questions []string
-	Domains   []proxy.DomainInfo
-	groups    []*GroupInfo
-	rooms     []*RoomInfo
+	//Domains   []proxy.DomainInfo
+	groups []*GroupInfo
+	rooms  []*RoomInfo
 }
 
 func (mine *cacheContext) CreateScene(info *SceneInfo) error {
@@ -67,12 +66,12 @@ func (mine *cacheContext) CreateScene(info *SceneInfo) error {
 	db.Status = uint8(SceneStatusIdle)
 	db.Location = info.Location
 	db.Address = info.Address
-	db.Bucket = info.Bucket
+	//db.Bucket = info.Bucket
 	db.Limit = info.Limit
 	db.Members = make([]string, 0, 1)
 	db.Parents = make([]string, 0, 1)
 	db.Questions = make([]string, 0, 1)
-	db.Domains = make([]proxy.DomainInfo, 0, 1)
+	//db.Domains = make([]proxy.DomainInfo, 0, 1)
 	db.Supporter = ""
 	err := nosql.CreateScene(db)
 	if err == nil {
@@ -137,6 +136,14 @@ func (mine *cacheContext) GetScenesByArray(array []string) []*SceneInfo {
 		}
 	}
 	return list
+}
+
+func (mine *cacheContext) GetSceneBySN(sn string) (*SceneInfo, error) {
+	db, err := nosql.GetDeviceBySN(sn)
+	if err != nil {
+		return nil, err
+	}
+	return mine.GetScene(db.Scene), nil
 }
 
 func (mine *cacheContext) GetScenesByParent(parent string, page, number uint32) (uint32, uint32, []*SceneInfo) {
@@ -216,16 +223,16 @@ func (mine *SceneInfo) initInfo(db *nosql.Scene) {
 	mine.members = db.Members
 	mine.Address = db.Address
 	mine.Supporter = db.Supporter
-	mine.Bucket = db.Bucket
+	//mine.Bucket = db.Bucket
 	mine.Questions = db.Questions
 	mine.parents = db.Parents
 	if mine.parents == nil {
 		mine.parents = make([]string, 0, 1)
 	}
-	mine.Domains = db.Domains
-	if mine.Domains == nil {
-		mine.Domains = make([]proxy.DomainInfo, 0, 1)
-	}
+	//mine.Domains = db.Domains
+	//if mine.Domains == nil {
+	//	mine.Domains = make([]proxy.DomainInfo, 0, 1)
+	//}
 }
 
 func (mine *SceneInfo) initGroups() {
@@ -326,14 +333,14 @@ func (mine *SceneInfo) UpdateLocation(local, operator string) error {
 	return err
 }
 
-func (mine *SceneInfo) UpdateDomains(operator string, list []proxy.DomainInfo) error {
-	err := nosql.UpdateSceneDomains(mine.UID, operator, list)
-	if err == nil {
-		mine.Domains = list
-		mine.Operator = operator
-	}
-	return err
-}
+//func (mine *SceneInfo) UpdateDomains(operator string, list []proxy.DomainInfo) error {
+//	err := nosql.UpdateSceneDomains(mine.UID, operator, list)
+//	if err == nil {
+//		mine.Domains = list
+//		mine.Operator = operator
+//	}
+//	return err
+//}
 
 func (mine *SceneInfo) UpdateQuestions(operator string, arr []string) error {
 	err := nosql.UpdateSceneQuestions(mine.UID, operator, arr)
@@ -353,14 +360,14 @@ func (mine *SceneInfo) UpdateLimit(operator string, limit int) error {
 	return err
 }
 
-func (mine *SceneInfo) UpdateBucket(msg, operator string) error {
-	err := nosql.UpdateSceneBucket(mine.UID, msg, operator)
-	if err == nil {
-		mine.Bucket = msg
-		mine.Operator = operator
-	}
-	return err
-}
+//func (mine *SceneInfo) UpdateBucket(msg, operator string) error {
+//	err := nosql.UpdateSceneBucket(mine.UID, msg, operator)
+//	if err == nil {
+//		mine.Bucket = msg
+//		mine.Operator = operator
+//	}
+//	return err
+//}
 
 func (mine *SceneInfo) UpdateShortName(name, operator string) error {
 	err := nosql.UpdateSceneShort(mine.UID, operator, name)

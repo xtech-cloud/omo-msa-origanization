@@ -5,7 +5,6 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"omo.msa.organization/proxy"
 	"time"
 )
 
@@ -18,25 +17,25 @@ type Scene struct {
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Name      string      `json:"name" bson:"name"`
-	Type      uint8       `json:"type" bson:"type"`
-	Status    uint8       `json:"status" bson:"status"`
-	Limit     uint16      `json:"limit" bson:"limit"`
-	Short     string      `json:"short" bson:"short"`
-	Cover     string      `json:"cover" bson:"cover"`
-	Master    string      `json:"master" bson:"master"`
-	Remark    string      `json:"remark" bson:"remark"`
-	Entity    string      `json:"entity" bson:"entity"`
-	Location  string      `json:"location" bson:"location"`
-	Supporter string      `json:"supporter" bson:"supporter"`
-	Bucket    string      `json:"bucket" bson:"bucket"`
-	Address   AddressInfo `json:"address" bson:"address"`
+	Name      string `json:"name" bson:"name"`
+	Type      uint8  `json:"type" bson:"type"`
+	Status    uint8  `json:"status" bson:"status"`
+	Limit     uint16 `json:"limit" bson:"limit"`
+	Short     string `json:"short" bson:"short"`
+	Cover     string `json:"cover" bson:"cover"`
+	Master    string `json:"master" bson:"master"`
+	Remark    string `json:"remark" bson:"remark"`
+	Entity    string `json:"entity" bson:"entity"`
+	Location  string `json:"location" bson:"location"`
+	Supporter string `json:"supporter" bson:"supporter"`
+	//Bucket    string      `json:"bucket" bson:"bucket"`
+	Address AddressInfo `json:"address" bson:"address"`
 	//Exhibitions []string            `json:"exhibitions" bson:"exhibitions"`
 	//Displays    []proxy.ShowingInfo `json:"displays" bson:"displays"`
-	Members   []string           `json:"members" bson:"members"`
-	Parents   []string           `json:"parents" bson:"parents"`
-	Questions []string           `json:"questions" bson:"questions"`
-	Domains   []proxy.DomainInfo `json:"domains" bson:"domains"`
+	Members   []string `json:"members" bson:"members"`
+	Parents   []string `json:"parents" bson:"parents"`
+	Questions []string `json:"questions" bson:"questions"`
+	//Domains   []proxy.DomainInfo `json:"domains" bson:"domains"`
 }
 
 func CreateScene(info *Scene) error {
@@ -139,11 +138,11 @@ func UpdateSceneStatus(uid string, status uint8, operator string) error {
 	return err
 }
 
-func UpdateSceneDomains(uid, operator string, domains []proxy.DomainInfo) error {
-	msg := bson.M{"domains": domains, "operator": operator, "updatedAt": time.Now()}
-	_, err := updateOne(TableScene, uid, msg)
-	return err
-}
+//func UpdateSceneDomains(uid, operator string, domains []proxy.DomainInfo) error {
+//	msg := bson.M{"domains": domains, "operator": operator, "updatedAt": time.Now()}
+//	_, err := updateOne(TableScene, uid, msg)
+//	return err
+//}
 
 func UpdateSceneQuestions(uid, operator string, arr []string) error {
 	msg := bson.M{"questions": arr, "operator": operator, "updatedAt": time.Now()}
@@ -169,11 +168,11 @@ func UpdateSceneSupporter(uid, supporter, operator string) error {
 	return err
 }
 
-func UpdateSceneBucket(uid, bucket, operator string) error {
-	msg := bson.M{"bucket": bucket, "operator": operator, "updatedAt": time.Now()}
-	_, err := updateOne(TableScene, uid, msg)
-	return err
-}
+//func UpdateSceneBucket(uid, bucket, operator string) error {
+//	msg := bson.M{"bucket": bucket, "operator": operator, "updatedAt": time.Now()}
+//	_, err := updateOne(TableScene, uid, msg)
+//	return err
+//}
 
 func UpdateSceneParents(uid, operator string, list []string) error {
 	msg := bson.M{"parents": list, "operator": operator, "updatedAt": time.Now()}
