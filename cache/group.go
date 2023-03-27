@@ -7,19 +7,20 @@ import (
 
 type GroupInfo struct {
 	baseInfo
-	Remark string
-	Contact string
-	Cover string
-	Master string
+	Remark    string
+	Contact   string
+	Cover     string
+	Master    string
 	Assistant string
-	Address nosql.AddressInfo
-	Location string
-	Scene string
-	members []string
+	Address   nosql.AddressInfo
+	Location  string
+	Scene     string
+	members   []string
 }
 
-func (mine *cacheContext)GetGroup(uid string) *GroupInfo {
+func (mine *cacheContext) GetGroup(uid string) *GroupInfo {
 	for _, scene := range mine.scenes {
+		scene.initGroups()
 		group := scene.GetGroup(uid)
 		if group != nil {
 			return group
@@ -28,9 +29,10 @@ func (mine *cacheContext)GetGroup(uid string) *GroupInfo {
 	return nil
 }
 
-func (mine *cacheContext)GetGroupByMember(uid string) []*GroupInfo {
+func (mine *cacheContext) GetGroupByMember(uid string) []*GroupInfo {
 	list := make([]*GroupInfo, 0, 5)
 	for _, scene := range mine.scenes {
+		scene.initGroups()
 		for _, group := range scene.groups {
 			if group.HadMember(uid) {
 				list = append(list, group)
@@ -40,9 +42,10 @@ func (mine *cacheContext)GetGroupByMember(uid string) []*GroupInfo {
 	return list
 }
 
-func (mine *cacheContext)GetGroupByContact(phone string) []*GroupInfo {
+func (mine *cacheContext) GetGroupByContact(phone string) []*GroupInfo {
 	list := make([]*GroupInfo, 0, 5)
 	for _, scene := range mine.scenes {
+		scene.initGroups()
 		for _, group := range scene.groups {
 			if group.Contact == phone {
 				list = append(list, group)
@@ -52,8 +55,9 @@ func (mine *cacheContext)GetGroupByContact(phone string) []*GroupInfo {
 	return list
 }
 
-func (mine *cacheContext)RemoveGroup(uid, operator string) error {
+func (mine *cacheContext) RemoveGroup(uid, operator string) error {
 	for _, scene := range mine.scenes {
+		scene.initGroups()
 		if scene.HadGroup(uid) {
 			return scene.RemoveGroup(uid, operator)
 		}
@@ -61,7 +65,7 @@ func (mine *cacheContext)RemoveGroup(uid, operator string) error {
 	return nil
 }
 
-func (mine *GroupInfo)initInfo(db *nosql.Group)  {
+func (mine *GroupInfo) initInfo(db *nosql.Group) {
 	mine.UID = db.UID.Hex()
 	mine.ID = db.ID
 	mine.UpdateTime = db.UpdatedTime
@@ -80,7 +84,7 @@ func (mine *GroupInfo)initInfo(db *nosql.Group)  {
 	mine.Scene = db.Scene
 }
 
-func (mine *GroupInfo)UpdateBase(name, remark, operator string) error {
+func (mine *GroupInfo) UpdateBase(name, remark, operator string) error {
 	if len(name) < 1 {
 		name = mine.Name
 	}
@@ -96,7 +100,7 @@ func (mine *GroupInfo)UpdateBase(name, remark, operator string) error {
 	return err
 }
 
-func (mine *GroupInfo)UpdateContact(phone, operator string) error {
+func (mine *GroupInfo) UpdateContact(phone, operator string) error {
 	err := nosql.UpdateGroupContact(mine.UID, phone, operator)
 	if err == nil {
 		mine.Contact = phone
@@ -105,7 +109,7 @@ func (mine *GroupInfo)UpdateContact(phone, operator string) error {
 	return err
 }
 
-func (mine *GroupInfo)UpdateMaster(master, operator string) error {
+func (mine *GroupInfo) UpdateMaster(master, operator string) error {
 	err := nosql.UpdateGroupMaster(mine.UID, master, operator)
 	if err == nil {
 		mine.Master = master
@@ -114,7 +118,7 @@ func (mine *GroupInfo)UpdateMaster(master, operator string) error {
 	return err
 }
 
-func (mine *GroupInfo)UpdateAssistant(uid, operator string) error {
+func (mine *GroupInfo) UpdateAssistant(uid, operator string) error {
 	err := nosql.UpdateGroupAssistant(mine.UID, uid, operator)
 	if err == nil {
 		mine.Assistant = uid
@@ -123,7 +127,7 @@ func (mine *GroupInfo)UpdateAssistant(uid, operator string) error {
 	return err
 }
 
-func (mine *GroupInfo)UpdateCover(cover, operator string) error {
+func (mine *GroupInfo) UpdateCover(cover, operator string) error {
 	err := nosql.UpdateGroupCover(mine.UID, cover, operator)
 	if err == nil {
 		mine.Cover = cover
@@ -132,7 +136,7 @@ func (mine *GroupInfo)UpdateCover(cover, operator string) error {
 	return err
 }
 
-func (mine *GroupInfo)UpdateLocation(local, operator string) error {
+func (mine *GroupInfo) UpdateLocation(local, operator string) error {
 	err := nosql.UpdateGroupLocation(mine.UID, local, operator)
 	if err == nil {
 		mine.Location = local
@@ -141,7 +145,7 @@ func (mine *GroupInfo)UpdateLocation(local, operator string) error {
 	return err
 }
 
-func (mine *GroupInfo)UpdateAddress(country, province, city, zone, operator string) error {
+func (mine *GroupInfo) UpdateAddress(country, province, city, zone, operator string) error {
 	addr := nosql.AddressInfo{Country: country, Province: province, City: city, Zone: zone}
 	err := nosql.UpdateGroupAddress(mine.UID, operator, addr)
 	if err == nil {
@@ -151,11 +155,11 @@ func (mine *GroupInfo)UpdateAddress(country, province, city, zone, operator stri
 	return err
 }
 
-func (mine *GroupInfo)HadMember(member string) bool {
+func (mine *GroupInfo) HadMember(member string) bool {
 	if mine.Master == member || mine.Assistant == member {
 		return true
 	}
-	for i := 0;i < len(mine.members);i += 1 {
+	for i := 0; i < len(mine.members); i += 1 {
 		if mine.members[i] == member {
 			return true
 		}
@@ -163,12 +167,12 @@ func (mine *GroupInfo)HadMember(member string) bool {
 	return false
 }
 
-func (mine *GroupInfo)AllMembers() []string {
+func (mine *GroupInfo) AllMembers() []string {
 	return mine.members
 }
 
-func (mine *GroupInfo)AppendMember(member string) error {
-	if mine.HadMember(member){
+func (mine *GroupInfo) AppendMember(member string) error {
+	if mine.HadMember(member) {
 		return errors.New("the member had existed")
 	}
 	err := nosql.AppendGroupMember(mine.UID, member)
@@ -178,17 +182,17 @@ func (mine *GroupInfo)AppendMember(member string) error {
 	return err
 }
 
-func (mine *GroupInfo)SubtractMember(member string) error {
-	if !mine.HadMember(member){
+func (mine *GroupInfo) SubtractMember(member string) error {
+	if !mine.HadMember(member) {
 		return errors.New("the member not existed")
 	}
 	err := nosql.SubtractGroupMember(mine.UID, member)
 	if err == nil {
-		for i := 0;i < len(mine.members);i += 1 {
+		for i := 0; i < len(mine.members); i += 1 {
 			if mine.members[i] == member {
-				if i == len(mine.members) - 1 {
+				if i == len(mine.members)-1 {
 					mine.members = append(mine.members[:i])
-				}else{
+				} else {
 					mine.members = append(mine.members[:i], mine.members[i+1:]...)
 				}
 				break
@@ -197,4 +201,3 @@ func (mine *GroupInfo)SubtractMember(member string) error {
 	}
 	return err
 }
-

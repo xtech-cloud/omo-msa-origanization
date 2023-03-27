@@ -12,7 +12,7 @@ type Area struct {
 	ID          uint64             `json:"id" bson:"id"`
 	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
-	DeleteTime  time.Time          `json:"deletedAt" bson:"deleteAt"`
+	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
@@ -57,7 +57,7 @@ func GetArea(uid string) (*Area, error) {
 }
 
 func GetAreasByOwner(owner string) ([]*Area, error) {
-	msg := bson.M{"scene": owner, "deletedAt": new(time.Time)}
+	msg := bson.M{"scene": owner, "deleteAt": new(time.Time)}
 	cursor, err1 := findMany(TableArea, msg, 0)
 	if err1 != nil {
 		return nil, err1
