@@ -25,10 +25,10 @@ func (mine *cacheContext) GetRoom(uid string) *RoomInfo {
 	return nil
 }
 
-func (mine *cacheContext) GetRoomsByDevice(sn string) []*RoomInfo {
+func (mine *cacheContext) GetRoomsByDevice(device string) []*RoomInfo {
 	list := make([]*RoomInfo, 0, 10)
 	for _, scene := range mine.scenes {
-		arr := scene.GetRoomsByDevice(sn)
+		arr := scene.GetRoomsByDevice(device)
 		if arr != nil && len(arr) > 0 {
 			list = append(list, arr...)
 		}
@@ -47,9 +47,9 @@ func (mine *cacheContext) GetRoomsByQuote(quote string) []*RoomInfo {
 	return list
 }
 
-func (mine *cacheContext) HadBindDeviceInRoom(sn string) bool {
+func (mine *cacheContext) HadBindDeviceInRoom(device string) bool {
 	for _, scene := range mine.scenes {
-		arr := scene.GetRoomsByDevice(sn)
+		arr := scene.GetRoomsByDevice(device)
 		if arr != nil && len(arr) > 0 {
 			return true
 		}
@@ -171,10 +171,10 @@ func (mine *RoomInfo) UpdateDisplays(area, operator string, displays []string) e
 	return info.UpdateDisplays(operator, displays)
 }
 
-func (mine *RoomInfo) HadDevice(sn string) bool {
+func (mine *RoomInfo) HadDevice(device string) bool {
 	areas := mine.Areas()
 	for _, item := range areas {
-		if item.Device == sn {
+		if item.Device == device {
 			return true
 		}
 	}

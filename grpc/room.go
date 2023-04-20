@@ -120,6 +120,13 @@ func (mine *RoomService) GetList(ctx context.Context, in *pb.RequestFilter, out 
 			list = cache.Context().GetRoomsByDevice(in.Value)
 		} else if in.Key == "quote" {
 			list = cache.Context().GetRoomsByQuote(in.Value)
+		} else if in.Key == "sn" {
+			device, er := cache.Context().GetDeviceBySN(in.Value)
+			if er != nil {
+				out.Status = outError(path, "not found the device by sn ", pbstatus.ResultStatus_NotExisted)
+				return nil
+			}
+			list = cache.Context().GetRoomsByDevice(device.UID)
 		} else {
 			list = make([]*cache.RoomInfo, 0, 1)
 		}
@@ -142,6 +149,13 @@ func (mine *RoomService) GetList(ctx context.Context, in *pb.RequestFilter, out 
 			list = scene.GetRoomsByQuote(in.Value)
 		} else if in.Key == "device" {
 			list = scene.GetRoomsByDevice(in.Value)
+		} else if in.Key == "sn" {
+			device, er := cache.Context().GetDeviceBySN(in.Value)
+			if er != nil {
+				out.Status = outError(path, "not found the device by sn ", pbstatus.ResultStatus_NotExisted)
+				return nil
+			}
+			list = scene.GetRoomsByDevice(device.UID)
 		} else {
 			list = make([]*cache.RoomInfo, 0, 1)
 		}

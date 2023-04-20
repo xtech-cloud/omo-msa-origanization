@@ -748,11 +748,11 @@ func (mine *SceneInfo) GetRoomsByQuote(quote string) []*RoomInfo {
 	return list
 }
 
-func (mine *SceneInfo) GetRoomsByDevice(sn string) []*RoomInfo {
+func (mine *SceneInfo) GetRoomsByDevice(device string) []*RoomInfo {
 	mine.initRooms()
 	list := make([]*RoomInfo, 0, len(mine.rooms))
 	for _, item := range mine.rooms {
-		if item.HadDevice(sn) {
+		if item.HadDevice(device) {
 			list = append(list, item)
 		}
 	}
