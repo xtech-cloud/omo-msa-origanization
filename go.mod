@@ -13,7 +13,7 @@ require (
 	github.com/micro/go-plugins/registry/etcdv3/v2 v2.9.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/tidwall/gjson v1.6.0
+	github.com/tidwall/gjson v1.13.0
 	github.com/xtech-cloud/omo-msp-organization v1.8.7
 	github.com/xtech-cloud/omo-msp-status v1.0.1
 	go.mongodb.org/mongo-driver v1.4.6
@@ -71,8 +71,8 @@ require (
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	github.com/tidwall/match v1.0.1 // indirect
-	github.com/tidwall/pretty v1.0.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.0.1 // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
@@ -91,7 +91,7 @@ require (
 	golang.org/x/tools v0.0.0-20191216173652-a0e659d51361 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 	google.golang.org/grpc v1.27.0 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
+	google.golang.org/protobuf v1.23.1-0.20200526195155-81db48ad09cc // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

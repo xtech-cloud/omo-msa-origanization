@@ -80,7 +80,7 @@ func checkPage(page, number uint32, all interface{}) (uint32, uint32, interface{
 
 func SwitchAreaToProduct(info *AreaInfo) *pb.ProductInfo {
 	tmp := new(pb.ProductInfo)
-	tmp.Sn = info.Device
+	tmp.Sn = info.DeviceSN()
 	tmp.Room = info.Parent
 	tmp.Template = info.Template
 	tmp.Name = info.Name

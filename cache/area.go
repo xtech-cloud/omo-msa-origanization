@@ -142,6 +142,18 @@ func (mine *AreaInfo) initInfo(db *nosql.Area) {
 	mine.Displays = db.Displays
 }
 
+func (mine *AreaInfo) DeviceInfo() (*DeviceInfo, error) {
+	return cacheCtx.GetDevice(mine.Device)
+}
+
+func (mine *AreaInfo) DeviceSN() string {
+	info, err := cacheCtx.GetDevice(mine.Device)
+	if err == nil {
+		return info.SN
+	}
+	return ""
+}
+
 func (mine *AreaInfo) UpdateBase(name, remark, operator string) error {
 	err := nosql.UpdateAreaBase(mine.UID, name, remark, operator)
 	if err == nil {

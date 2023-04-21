@@ -9,6 +9,7 @@ proto:
 
 .PHONY: build
 build:
+	export GOPROXY=https://goproxy.cn
 	go build -ldflags \
 		"\
 		-X 'main.BuildVersion=${BUILD_VERSION}' \
