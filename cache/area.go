@@ -173,10 +173,10 @@ func (mine *AreaInfo) UpdateTemplate(template, operator string) error {
 	return err
 }
 
-func (mine *AreaInfo) UpdateDevice(sn, operator string, tp uint32) error {
-	err := nosql.UpdateAreaDevice(mine.UID, sn, operator, tp)
+func (mine *AreaInfo) UpdateDevice(device, operator string, tp uint32) error {
+	err := nosql.UpdateAreaDevice(mine.UID, device, operator, tp)
 	if err == nil {
-		mine.Device = sn
+		mine.Device = device
 		mine.Type = tp
 		mine.Operator = operator
 	}

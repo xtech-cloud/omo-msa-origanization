@@ -313,8 +313,12 @@ func (mine *RoomService) AppendDevice(ctx context.Context, in *pb.ReqRoomDevice,
 	//	out.Status = outError(path,"the room had the device of type", pbstatus.ResultStatus_Repeated)
 	//	return nil
 	//}
-
-	err := info.AppendDevice(in.Area, in.Device, in.Remark, in.Operator, in.Type)
+	dev, err := cache.Context().GetDevice(in.Device)
+	if err != nil {
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
+	err = info.AppendDevice(in.Area, dev.UID, in.Remark, in.Operator, in.Type)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
