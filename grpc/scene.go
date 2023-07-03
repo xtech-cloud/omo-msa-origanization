@@ -333,31 +333,31 @@ func (mine *SceneService) UpdateSupporter(ctx context.Context, in *pb.RequestFla
 	return nil
 }
 
-func (mine *SceneService) UpdateDomains(ctx context.Context, in *pb.ReqSceneDomains, out *pb.ReplyInfo) error {
-	path := "scene.updateDomains"
-	inLog(path, in)
-
-	if len(in.Uid) < 1 {
-		out.Status = outError(path, "the scene uid is empty ", pbstatus.ResultStatus_Empty)
-		return nil
-	}
-	//info := cache.Context().GetScene(in.Uid)
-	//if info == nil {
-	//	out.Status = outError(path, "the scene not found ", pbstatus.ResultStatus_NotExisted)
-	//	return nil
-	//}
-	//arr := make([]proxy.DomainInfo, 0, len(in.List))
-	//for _, item := range in.List {
-	//	arr = append(arr, proxy.DomainInfo{Type: uint8(item.Type), UID: item.Sn, Remark: item.Remark, Keywords: item.Keywords, Name: item.Name})
-	//}
-	//err := info.UpdateDomains(in.Operator, arr)
-	//if err != nil {
-	//	out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
-	//	return nil
-	//}
-	out.Status = outLog(path, out)
-	return nil
-}
+//func (mine *SceneService) UpdateDomains(ctx context.Context, in *pb.ReqSceneDomains, out *pb.ReplyInfo) error {
+//	path := "scene.updateDomains"
+//	inLog(path, in)
+//
+//	if len(in.Uid) < 1 {
+//		out.Status = outError(path, "the scene uid is empty ", pbstatus.ResultStatus_Empty)
+//		return nil
+//	}
+//	//info := cache.Context().GetScene(in.Uid)
+//	//if info == nil {
+//	//	out.Status = outError(path, "the scene not found ", pbstatus.ResultStatus_NotExisted)
+//	//	return nil
+//	//}
+//	//arr := make([]proxy.DomainInfo, 0, len(in.List))
+//	//for _, item := range in.List {
+//	//	arr = append(arr, proxy.DomainInfo{Type: uint8(item.Type), UID: item.Sn, Remark: item.Remark, Keywords: item.Keywords, Name: item.Name})
+//	//}
+//	//err := info.UpdateDomains(in.Operator, arr)
+//	//if err != nil {
+//	//	out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+//	//	return nil
+//	//}
+//	out.Status = outLog(path, out)
+//	return nil
+//}
 
 func (mine *SceneService) UpdateBucket(ctx context.Context, in *pb.RequestFlag, out *pb.ReplyInfo) error {
 	path := "scene.updateBucket"

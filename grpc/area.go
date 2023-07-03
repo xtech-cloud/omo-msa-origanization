@@ -25,11 +25,16 @@ func switchArea(info *cache.AreaInfo) *pb.AreaInfo {
 	tmp.Parent = info.Parent
 	tmp.Owner = info.Owner
 	tmp.Type = info.Type
-	tmp.Template = info.Template
+	tmp.Template = info.Template //产品模板UID
 	tmp.Question = info.Question
 	tmp.Device = info.Device
 	tmp.Displays = info.Displays
 	tmp.Catalog = info.Catalog
+	tmp.Sn = info.DeviceSN()
+	tmp.Modules = make([]*pb.PairInfo, 0, len(info.Modules))
+	for _, module := range info.Modules {
+		tmp.Modules = append(tmp.Modules, &pb.PairInfo{Key: module.Key, Value: module.Value})
+	}
 	return tmp
 }
 
@@ -191,6 +196,14 @@ func (mine *AreaService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateFil
 		err = info.UpdateType(uint32(tp), in.Operator)
 	} else if in.Key == "catalog" {
 		err = info.UpdateCatalog(in.Value, in.Operator)
+	} else if in.Key == "module" {
+		if len(in.Values) < 2 {
+			err = errors.New("the values length error when udpate module")
+		} else {
+			key := in.Values[0]
+			val := in.Values[1]
+			err = info.UpdateModule(key, val, in.Operator)
+		}
 	} else {
 		err = errors.New("the field not defined")
 	}

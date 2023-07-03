@@ -2,7 +2,6 @@ package cache
 
 import (
 	"errors"
-	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"omo.msa.organization/proxy/nosql"
 	"omo.msa.organization/tool"
 )
@@ -191,32 +190,32 @@ func (mine *RoomInfo) HadDeviceByType(tp uint8) bool {
 	return false
 }
 
-func (mine *RoomInfo) Products() []*pb.ProductInfo {
-	array := mine.Areas()
-	list := make([]*pb.ProductInfo, 0, len(array))
-	for _, item := range array {
-		tmp := SwitchAreaToProduct(item)
-		list = append(list, tmp)
-	}
-	return list
-}
+//func (mine *RoomInfo) Areas() []*AreaInfo {
+//	array := mine.Areas()
+//	list := make([]*pb.AreaInfo, 0, len(array))
+//	for _, item := range array {
+//		tmp := sw(item)
+//		list = append(list, tmp)
+//	}
+//	return list
+//}
 
-func (mine *cacheContext) switchDisplays(tp uint32, arr []string) []*pb.DisplayInfo {
-	list := make([]*pb.DisplayInfo, 0, 10)
-	tmp := new(pb.DisplayInfo)
-	tmp.Group = ""
-	tmp.Showings = arr
-	list = append(list, tmp)
-	//prepares := mine.GetPrepareDisplays(tp)
-	//for _, prepare := range prepares {
-	//	tmp := new(pb.DisplayInfo)
-	//	tmp.Group = prepare.Group
-	//	tmp.Prepares = prepare.Showings
-	//	tmp.Showings = arr
-	//	list = append(list, tmp)
-	//}
-	return list
-}
+//func (mine *cacheContext) switchDisplays(tp uint32, arr []string) []*pb.DisplayInfo {
+//	list := make([]*pb.DisplayInfo, 0, 10)
+//	tmp := new(pb.DisplayInfo)
+//	tmp.Group = ""
+//	tmp.Showings = arr
+//	list = append(list, tmp)
+//	//prepares := mine.GetPrepareDisplays(tp)
+//	//for _, prepare := range prepares {
+//	//	tmp := new(pb.DisplayInfo)
+//	//	tmp.Group = prepare.Group
+//	//	tmp.Prepares = prepare.Showings
+//	//	tmp.Showings = arr
+//	//	list = append(list, tmp)
+//	//}
+//	return list
+//}
 
 func (mine *RoomInfo) GetAreaBySN(sn string) *AreaInfo {
 	areas := mine.Areas()

@@ -4,6 +4,7 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"omo.msa.organization/proxy"
 	"time"
 )
 
@@ -16,18 +17,19 @@ type Area struct {
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Type     uint32   `json:"type" bson:"type"`
-	Name     string   `json:"name" bson:"name"`
-	Remark   string   `json:"remark" bson:"remark"`
-	Scene    string   `json:"scene" bson:"scene"`
-	Parent   string   `json:"parent" bson:"parent"`
-	Template string   `json:"template" bson:"template"`
-	Width    int32    `json:"width" bson:"width"`
-	Height   int32    `json:"height" bson:"height"`
-	Device   string   `json:"device" bson:"device"`
-	Question string   `json:"question" bson:"question"`
-	Catalog  string   `json:"catalog" bson:"catalog"`
-	Displays []string `json:"displays" bson:"displays"` // 正在设备展览的列表
+	Type     uint32            `json:"type" bson:"type"`
+	Name     string            `json:"name" bson:"name"`
+	Remark   string            `json:"remark" bson:"remark"`
+	Scene    string            `json:"scene" bson:"scene"`
+	Parent   string            `json:"parent" bson:"parent"`
+	Template string            `json:"template" bson:"template"`
+	Width    int32             `json:"width" bson:"width"`
+	Height   int32             `json:"height" bson:"height"`
+	Device   string            `json:"device" bson:"device"`
+	Question string            `json:"question" bson:"question"`
+	Catalog  string            `json:"catalog" bson:"catalog"`
+	Displays []string          `json:"displays" bson:"displays"` // 正在设备展览的列表
+	Modules  []*proxy.PairInfo `json:"modules" bson:"modules"`
 }
 
 func CreateArea(info *Area) error {
@@ -194,6 +196,12 @@ func UpdateAreaQuestion(uid, question, operator string) error {
 
 func UpdateAreaDisplays(uid, operator string, displays []string) error {
 	msg := bson.M{"displays": displays, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableArea, uid, msg)
+	return err
+}
+
+func UpdateAreaModules(uid, operator string, list []*proxy.PairInfo) error {
+	msg := bson.M{"modules": list, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableArea, uid, msg)
 	return err
 }

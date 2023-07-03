@@ -22,7 +22,12 @@ func switchRoom(info *cache.RoomInfo) *pb.RoomInfo {
 	tmp.Owner = info.Scene
 	tmp.Remark = info.Remark
 	tmp.Quotes = info.Quotes
-	tmp.Areas = info.Products()
+	areas := info.Areas()
+	tmp.Areas = make([]*pb.AreaInfo, 0, len(areas))
+	for _, area := range areas {
+		a := switchArea(area)
+		tmp.Areas = append(tmp.Areas, a)
+	}
 	return tmp
 }
 
@@ -293,7 +298,7 @@ func (mine *RoomService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateFil
 	return nil
 }
 
-func (mine *RoomService) AppendDevice(ctx context.Context, in *pb.ReqRoomDevice, out *pb.ReplyRoomDevices) error {
+func (mine *RoomService) AppendDevice(ctx context.Context, in *pb.ReqRoomDevice, out *pb.ReplyRoomAreas) error {
 	path := "room.appendDevice"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
@@ -323,12 +328,17 @@ func (mine *RoomService) AppendDevice(ctx context.Context, in *pb.ReqRoomDevice,
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
-	out.List = info.Products()
+	list := info.Areas()
+	out.List = make([]*pb.AreaInfo, 0, len(list))
+	for _, item := range list {
+		tmp := switchArea(item)
+		out.List = append(out.List, tmp)
+	}
 	out.Status = outLog(path, out)
 	return nil
 }
 
-func (mine *RoomService) SubtractDevice(ctx context.Context, in *pb.ReqRoomDevice, out *pb.ReplyRoomDevices) error {
+func (mine *RoomService) SubtractDevice(ctx context.Context, in *pb.ReqRoomDevice, out *pb.ReplyRoomAreas) error {
 	path := "room.subtractDevice"
 	inLog(path, in)
 	if len(in.Uid) < 1 {
@@ -350,12 +360,17 @@ func (mine *RoomService) SubtractDevice(ctx context.Context, in *pb.ReqRoomDevic
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
-	out.List = info.Products()
+	list := info.Areas()
+	out.List = make([]*pb.AreaInfo, 0, len(list))
+	for _, item := range list {
+		tmp := switchArea(item)
+		out.List = append(out.List, tmp)
+	}
 	out.Status = outLog(path, out)
 	return nil
 }
 
-func (mine *RoomService) GetDevices(ctx context.Context, in *pb.RequestFilter, out *pb.ReplyRoomDevices) error {
+func (mine *RoomService) GetDevices(ctx context.Context, in *pb.RequestFilter, out *pb.ReplyRoomAreas) error {
 	path := "room.getDevices"
 	inLog(path, in)
 	if len(in.Scene) < 1 {
@@ -383,9 +398,9 @@ func (mine *RoomService) GetDevices(ctx context.Context, in *pb.RequestFilter, o
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
-	out.List = make([]*pb.ProductInfo, 0, len(list))
+	out.List = make([]*pb.AreaInfo, 0, len(list))
 	for _, item := range list {
-		tmp := cache.SwitchAreaToProduct(item)
+		tmp := switchArea(item)
 		out.List = append(out.List, tmp)
 	}
 	out.Status = outLog(path, out)

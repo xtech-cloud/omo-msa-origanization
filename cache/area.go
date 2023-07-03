@@ -3,6 +3,7 @@ package cache
 import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"omo.msa.organization/proxy"
 	"omo.msa.organization/proxy/nosql"
 	"time"
 )
@@ -18,7 +19,8 @@ type AreaInfo struct {
 	Height   int32
 	Device   string
 	Question string
-	Catalog  string //终端定制目录base64加密
+	Catalog  string            //终端定制目录base64加密
+	Modules  []*proxy.PairInfo //模块配置
 	Displays []string
 }
 
@@ -40,6 +42,7 @@ func (mine *cacheContext) CreateArea(name, remark, owner, parent, operator strin
 	db.Question = ""
 	db.Catalog = ""
 	db.Displays = make([]string, 0, 1)
+	db.Modules = make([]*proxy.PairInfo, 0, 1)
 
 	err := nosql.CreateArea(db)
 	if err != nil {
@@ -140,6 +143,7 @@ func (mine *AreaInfo) initInfo(db *nosql.Area) {
 	mine.Catalog = db.Catalog
 	mine.Question = db.Question
 	mine.Displays = db.Displays
+	mine.Modules = db.Modules
 }
 
 func (mine *AreaInfo) DeviceInfo() (*DeviceInfo, error) {
@@ -230,4 +234,21 @@ func (mine *AreaInfo) UpdateQuestion(question, operator string) error {
 
 func (mine *AreaInfo) Remove(operator string) error {
 	return nosql.RemoveArea(mine.UID, operator)
+}
+
+func (mine *AreaInfo) UpdateModule(key, value, operator string) error {
+	arr := make([]*proxy.PairInfo, 0, len(mine.Modules))
+	arr = append(arr, mine.Modules...)
+	ok := false
+	for _, info := range arr {
+		if info.Key == key {
+			info.Value = value
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		arr = append(arr, &proxy.PairInfo{Key: key, Value: value})
+	}
+	return nosql.UpdateAreaModules(mine.UID, operator, arr)
 }
