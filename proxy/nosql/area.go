@@ -58,6 +58,20 @@ func GetArea(uid string) (*Area, error) {
 	return model, nil
 }
 
+func GetAreaByDevice(uid string) (*Area, error) {
+	msg := bson.M{"device": uid, "deleteAt": new(time.Time)}
+	result, err := findOneBy(TableArea, msg)
+	if err != nil {
+		return nil, err
+	}
+	model := new(Area)
+	err1 := result.Decode(model)
+	if err1 != nil {
+		return nil, err1
+	}
+	return model, nil
+}
+
 func GetAreasByOwner(owner string) ([]*Area, error) {
 	msg := bson.M{"scene": owner, "deleteAt": new(time.Time)}
 	cursor, err1 := findMany(TableArea, msg, 0)

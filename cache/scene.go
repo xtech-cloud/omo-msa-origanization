@@ -124,7 +124,7 @@ func (mine *cacheContext) GetScenes(page, number uint32) (uint32, uint32, []*Sce
 		return 0, 0, make([]*SceneInfo, 0, 1)
 	}
 	total, maxPage, list := checkPage(page, number, mine.scenes)
-	return total, maxPage, list.([]*SceneInfo)
+	return total, maxPage, list
 }
 
 func (mine *cacheContext) GetScenesByArray(array []string) []*SceneInfo {
@@ -160,7 +160,7 @@ func (mine *cacheContext) GetScenesByParent(parent string, page, number uint32) 
 		}
 	}
 	total, maxPage, list := checkPage(page, number, all)
-	return total, maxPage, list.([]*SceneInfo)
+	return total, maxPage, list
 }
 
 func (mine *cacheContext) GetScenesByType(tp uint8) []*SceneInfo {
@@ -573,7 +573,7 @@ func (mine *SceneInfo) GetGroups(number, page uint32) (uint32, uint32, []*GroupI
 		return 0, 0, make([]*GroupInfo, 0, 1)
 	}
 	total, maxPage, list := checkPage(page, number, mine.groups)
-	return total, maxPage, list.([]*GroupInfo)
+	return total, maxPage, list
 }
 
 //endregion
@@ -661,7 +661,7 @@ func (mine *SceneInfo) GetRegions(number, page uint32) (uint32, uint32, []*Regio
 		return 0, 0, make([]*RegionInfo, 0, 1)
 	}
 	total, maxPage, list := checkPage(page, number, array)
-	return total, maxPage, list.([]*RegionInfo)
+	return total, maxPage, list
 }
 
 //endregion

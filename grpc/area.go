@@ -124,6 +124,14 @@ func (mine *AreaService) GetListByFilter(ctx context.Context, in *pb.RequestFilt
 		list = cache.Context().GetAreasByOwner(in.Scene)
 	} else if in.Key == "template" {
 		list = cache.Context().GetAreasByTemplate(in.Scene, in.Value)
+	} else if in.Key == "array" {
+		list = cache.Context().GetAreaList(in.List)
+	} else if in.Key == "device" {
+		list = make([]*cache.AreaInfo, 0, 1)
+		info, er := cache.Context().GetAreaByDevice(in.Value)
+		if er == nil {
+			list = append(list, info)
+		}
 	} else {
 		err = errors.New("the key not defined")
 	}

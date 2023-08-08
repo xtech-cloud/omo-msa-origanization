@@ -10,18 +10,19 @@ import (
 
 type AreaInfo struct {
 	baseInfo
-	Remark   string
-	Owner    string
-	Parent   string
-	Template string //产品配置模板
-	Type     uint32 //产品类型
-	Width    int32
-	Height   int32
-	Device   string
-	Question string
-	Catalog  string            //终端定制目录base64加密
-	Modules  []*proxy.PairInfo //模块配置
-	Displays []string
+	Remark     string
+	Owner      string
+	Parent     string
+	Template   string //产品配置模板
+	Type       uint32 //产品类型
+	Width      int32
+	Height     int32             //
+	UrgentPage string            //紧急播放页面
+	Device     string            //设备UID
+	Question   string            //终端使用的答题类型
+	Catalog    string            //终端定制目录base64加密
+	Modules    []*proxy.PairInfo //模块配置
+	Displays   []string
 }
 
 func (mine *cacheContext) CreateArea(name, remark, owner, parent, operator string) (*AreaInfo, error) {
@@ -55,9 +56,22 @@ func (mine *cacheContext) CreateArea(name, remark, owner, parent, operator strin
 
 func (mine *cacheContext) GetArea(uid string) (*AreaInfo, error) {
 	if len(uid) < 2 {
-		return nil, errors.New("the collective museum uid is empty")
+		return nil, errors.New("the area uid is empty")
 	}
 	db, err := nosql.GetArea(uid)
+	if err != nil {
+		return nil, err
+	}
+	info := new(AreaInfo)
+	info.initInfo(db)
+	return info, nil
+}
+
+func (mine *cacheContext) GetAreaByDevice(uid string) (*AreaInfo, error) {
+	if len(uid) < 2 {
+		return nil, errors.New("the area device uid is empty")
+	}
+	db, err := nosql.GetAreaByDevice(uid)
 	if err != nil {
 		return nil, err
 	}
