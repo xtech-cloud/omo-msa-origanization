@@ -132,6 +132,12 @@ func (mine *AreaService) GetListByFilter(ctx context.Context, in *pb.RequestFilt
 		if er == nil {
 			list = append(list, info)
 		}
+	} else if in.Key == "sn" {
+		list = make([]*cache.AreaInfo, 0, 1)
+		info, er := cache.Context().GetAreaBySN(in.Value)
+		if er == nil {
+			list = append(list, info)
+		}
 	} else {
 		err = errors.New("the key not defined")
 	}
