@@ -31,6 +31,7 @@ func switchArea(info *cache.AreaInfo) *pb.AreaInfo {
 	tmp.Displays = info.Displays
 	tmp.Catalog = info.Catalog
 	tmp.Sn = info.DeviceSN()
+	tmp.Aspect = info.GetAspect()
 	tmp.Modules = make([]*pb.PairInfo, 0, len(info.Modules))
 	for _, module := range info.Modules {
 		tmp.Modules = append(tmp.Modules, &pb.PairInfo{Key: module.Key, Value: module.Value})

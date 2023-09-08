@@ -174,7 +174,7 @@ func (mine *DeviceService) UpdateBase(ctx context.Context, in *pb.ReqDeviceBase,
 		return nil
 	}
 	var err error
-	err = info.UpdateBase(in.Name, in.Remark, "")
+	err = info.UpdateBase(in.Name, in.Remark, in.Operator)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -201,6 +201,8 @@ func (mine *DeviceService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateF
 		err = info.UpdateCertificate(in.Value, in.Operator)
 	} else if in.Key == "scene" {
 		err = info.UpdateScene(in.Value, in.Operator)
+	} else if in.Key == "aspect" {
+		err = info.UpdateAspect(in.Value, in.Operator)
 	} else if in.Key == "type" {
 		tp := parseInt(in.Value)
 		err = info.UpdateType(in.Operator, uint8(tp))

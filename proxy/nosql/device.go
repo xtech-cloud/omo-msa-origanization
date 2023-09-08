@@ -20,9 +20,10 @@ type Invite struct {
 	Scene       string `json:"scene" bson:"scene"` // 所属场景
 	Type        uint8  `json:"type" bson:"type"`   //类型
 	Status      uint8  `json:"status" bson:"status"`
-	Remark      string `json:"remark" bson:"remark"`           //备注
-	SN          string `json:"sn" bson:"sn"`                   //设备SN或者邀请码
-	OS          string `json:"os" bson:"os"`                   //操作系统
+	Remark      string `json:"remark" bson:"remark"` //备注
+	SN          string `json:"sn" bson:"sn"`         //设备SN或者邀请码
+	OS          string `json:"os" bson:"os"`         //操作系统
+	Aspect      string `json:"aspect" bson:"aspect"`
 	ExpiryTime  uint32 `json:"expiry" bson:"expiry"`           //有效时长
 	ActiveTime  int64  `json:"activated" bson:"activated"`     //激活时间
 	Quote       string `json:"quote" bson:"quote"`             //
@@ -181,6 +182,12 @@ func UpdateDeviceCertificate(uid, data, operator string) error {
 
 func UpdateDeviceScene(uid, data, operator string) error {
 	msg := bson.M{"scene": data, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableDevice, uid, msg)
+	return err
+}
+
+func UpdateDeviceAspect(uid, data, operator string) error {
+	msg := bson.M{"aspect": data, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }

@@ -24,6 +24,7 @@ type DeviceInfo struct {
 	OS          string
 	Quote       string
 	SN          string //邀请码
+	Aspect      string
 	ActiveTime  int64  //激活时间
 	Expired     uint32 //有效时间
 	Certificate string //证书
@@ -43,6 +44,7 @@ func (mine *DeviceInfo) initInfo(db *nosql.Invite) {
 	mine.Quote = db.Quote
 	mine.SN = db.SN
 	mine.Type = db.Type
+	mine.Aspect = db.Aspect
 	mine.ActiveTime = db.ActiveTime
 	mine.Expired = db.ExpiryTime
 	mine.Certificate = db.Certificate
@@ -73,6 +75,16 @@ func (mine *DeviceInfo) UpdateScene(data, operator string) error {
 		mine.Scene = data
 		mine.Operator = operator
 		mine.updateStatus(operator)
+	}
+	return err
+}
+
+func (mine *DeviceInfo) UpdateAspect(data, operator string) error {
+	err := nosql.UpdateDeviceAspect(mine.UID, data, operator)
+	if err == nil {
+		mine.Aspect = data
+		mine.Operator = operator
+		mine.UpdateTime = time.Now()
 	}
 	return err
 }

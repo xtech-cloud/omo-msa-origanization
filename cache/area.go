@@ -19,9 +19,12 @@ type AreaInfo struct {
 	Height   int32 //
 	//UrgentPage string            //紧急播放页面
 	//PlaySheet  string            //
-	Device   string            //设备UID
-	Question string            //终端使用的答题类型
-	Catalog  string            //终端定制目录base64加密
+	Device   string //设备UID
+	Question string //终端使用的答题类型
+	Catalog  string //终端定制目录base64加密
+
+	deviceInfo *DeviceInfo
+
 	Modules  []*proxy.PairInfo //模块配置
 	Displays []string
 }
@@ -177,11 +180,25 @@ func (mine *AreaInfo) DeviceInfo() (*DeviceInfo, error) {
 }
 
 func (mine *AreaInfo) DeviceSN() string {
-	info, err := cacheCtx.GetDevice(mine.Device)
-	if err == nil {
-		return info.SN
+	if mine.deviceInfo == nil {
+		mine.deviceInfo, _ = cacheCtx.GetDevice(mine.Device)
 	}
-	return ""
+
+	if mine.deviceInfo == nil {
+		return ""
+	}
+	return mine.deviceInfo.SN
+}
+
+func (mine *AreaInfo) GetAspect() string {
+	if mine.deviceInfo == nil {
+		mine.deviceInfo, _ = cacheCtx.GetDevice(mine.Device)
+	}
+
+	if mine.deviceInfo == nil {
+		return ""
+	}
+	return mine.deviceInfo.Aspect
 }
 
 func (mine *AreaInfo) UpdateBase(name, remark, operator string) error {

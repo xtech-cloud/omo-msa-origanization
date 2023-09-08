@@ -530,8 +530,8 @@ github.com/xeipuuv/gojsonschema v0.0.0-20180618132009-1d523034197f/go.mod h1:5yf
 github.com/xeipuuv/gojsonschema v1.1.0/go.mod h1:5yf86TLmAcydyeJq5YvxkGPE2fm/u4myDekKRoLuqhs=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 h1:eY9dn8+vbi4tKz5Qo6v2eYzo7kUS51QINcR5jNpbZS8=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
-github.com/xtech-cloud/omo-msp-organization v1.8.11 h1:x169VUp8KuE2csum9lDuxQKF9Qn+ylkNsCz3wBA8qm4=
-github.com/xtech-cloud/omo-msp-organization v1.8.11/go.mod h1:dCHWqS2CiPolnOEQEd+2zyxwb5nadxPcHlQlGMg3kb0=
+github.com/xtech-cloud/omo-msp-organization v1.8.13 h1:mkR8QJhLfR2twbV6Zgd3C1+KDQ+TTZXEe56suUX53iI=
+github.com/xtech-cloud/omo-msp-organization v1.8.13/go.mod h1:dCHWqS2CiPolnOEQEd+2zyxwb5nadxPcHlQlGMg3kb0=
 github.com/xtech-cloud/omo-msp-status v1.0.1 h1:FfqriKg4T6PKTI7+o//KBiZPMhZqhfSnwff/MB4y6D4=
 github.com/xtech-cloud/omo-msp-status v1.0.1/go.mod h1:TZEgM32ZnapuqmsPPdStqgBeeWE708h6YBxb1qtbMFk=
 go.etcd.io/bbolt v1.3.4/go.mod h1:G5EMThwa9y8QZGBClrRx5EY+Yw9kAhnjy3bSjsnlVTQ=
