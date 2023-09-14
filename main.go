@@ -46,6 +46,7 @@ func main() {
 	_ = proto.RegisterAreaServiceHandler(service.Server(), new(grpc.AreaService))
 	_ = proto.RegisterRegionServiceHandler(service.Server(), new(grpc.RegionService))
 	_ = proto.RegisterDeviceServiceHandler(service.Server(), new(grpc.DeviceService))
+	_ = proto.RegisterMaintainServiceHandler(service.Server(), new(grpc.MaintainService))
 
 	app, _ := filepath.Abs(os.Args[0])
 
