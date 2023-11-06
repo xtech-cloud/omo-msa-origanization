@@ -25,11 +25,13 @@ type Area struct {
 	Template string            `json:"template" bson:"template"`
 	Width    int32             `json:"width" bson:"width"`
 	Height   int32             `json:"height" bson:"height"`
+	Limit    uint32            `json:"limit" bson:"limit"` //最大展览数量限制
 	Device   string            `json:"device" bson:"device"`
 	Question string            `json:"question" bson:"question"`
 	Catalog  string            `json:"catalog" bson:"catalog"`
 	Displays []string          `json:"displays" bson:"displays"` // 正在设备展览的列表
 	Modules  []*proxy.PairInfo `json:"modules" bson:"modules"`
+	Sources  []*proxy.PairInfo `json:"sources" bson:"sources"`
 }
 
 func CreateArea(info *Area) error {
@@ -208,6 +210,12 @@ func UpdateAreaQuestion(uid, question, operator string) error {
 	return err
 }
 
+func UpdateAreaLimit(uid, operator string, num uint32) error {
+	msg := bson.M{"limit": num, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableArea, uid, msg)
+	return err
+}
+
 func UpdateAreaDisplays(uid, operator string, displays []string) error {
 	msg := bson.M{"displays": displays, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableArea, uid, msg)
@@ -216,6 +224,12 @@ func UpdateAreaDisplays(uid, operator string, displays []string) error {
 
 func UpdateAreaModules(uid, operator string, list []*proxy.PairInfo) error {
 	msg := bson.M{"modules": list, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableArea, uid, msg)
+	return err
+}
+
+func UpdateAreaSources(uid, operator string, list []*proxy.PairInfo) error {
+	msg := bson.M{"sources": list, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableArea, uid, msg)
 	return err
 }

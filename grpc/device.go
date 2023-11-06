@@ -206,6 +206,9 @@ func (mine *DeviceService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateF
 	} else if in.Key == "type" {
 		tp := parseInt(in.Value)
 		err = info.UpdateType(in.Operator, uint8(tp))
+	} else if in.Key == "status" {
+		st := parseInt(in.Value)
+		err = info.UpdateStatus(in.Operator, uint8(st))
 	} else {
 		err = errors.New("the field not defined")
 	}

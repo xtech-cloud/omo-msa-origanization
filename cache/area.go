@@ -15,8 +15,10 @@ type AreaInfo struct {
 	Parent   string
 	Template string //产品配置模板
 	Type     uint32 //产品类型
+
 	Width    int32
-	Height   int32 //
+	Height   int32  //
+	LimitNum uint32 //展览限制的数量
 	//UrgentPage string            //紧急播放页面
 	//PlaySheet  string            //
 	Device   string //设备UID
@@ -26,6 +28,7 @@ type AreaInfo struct {
 	deviceInfo *DeviceInfo
 
 	Modules  []*proxy.PairInfo //模块配置
+	Sources  []*proxy.PairInfo //定制资源配置
 	Displays []string
 }
 
@@ -42,12 +45,14 @@ func (mine *cacheContext) CreateArea(name, remark, owner, parent, operator strin
 	db.Type = 0
 	db.Width = 0
 	db.Height = 0
+	db.Limit = 0
 	db.Template = ""
 	db.Device = ""
 	db.Question = ""
 	db.Catalog = ""
 	db.Displays = make([]string, 0, 1)
 	db.Modules = make([]*proxy.PairInfo, 0, 1)
+	db.Sources = make([]*proxy.PairInfo, 0, 1)
 
 	err := nosql.CreateArea(db)
 	if err != nil {
@@ -164,6 +169,7 @@ func (mine *AreaInfo) initInfo(db *nosql.Area) {
 	mine.Operator = db.Operator
 	mine.Parent = db.Parent
 	mine.Owner = db.Scene
+	mine.LimitNum = db.Limit
 	mine.Template = db.Template
 	mine.Width = db.Width
 	mine.Height = db.Height
@@ -173,6 +179,7 @@ func (mine *AreaInfo) initInfo(db *nosql.Area) {
 	mine.Question = db.Question
 	mine.Displays = db.Displays
 	mine.Modules = db.Modules
+	mine.Sources = db.Sources
 }
 
 func (mine *AreaInfo) DeviceInfo() (*DeviceInfo, error) {
@@ -215,6 +222,18 @@ func (mine *AreaInfo) UpdateTemplate(template, operator string) error {
 	err := nosql.UpdateAreaTemplate(mine.UID, template, operator)
 	if err == nil {
 		mine.Template = template
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *AreaInfo) UpdateLimitCount(operator string, num uint32) error {
+	if mine.LimitNum == num {
+		return nil
+	}
+	err := nosql.UpdateAreaLimit(mine.UID, operator, num)
+	if err == nil {
+		mine.LimitNum = num
 		mine.Operator = operator
 	}
 	return err
@@ -294,4 +313,21 @@ func (mine *AreaInfo) UpdateModule(key, value, operator string) error {
 		arr = append(arr, &proxy.PairInfo{Key: key, Value: value})
 	}
 	return nosql.UpdateAreaModules(mine.UID, operator, arr)
+}
+
+func (mine *AreaInfo) UpdateCustomSource(key, value, operator string) error {
+	arr := make([]*proxy.PairInfo, 0, len(mine.Sources))
+	arr = append(arr, mine.Sources...)
+	ok := false
+	for _, info := range arr {
+		if info.Key == key {
+			info.Value = value
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		arr = append(arr, &proxy.PairInfo{Key: key, Value: value})
+	}
+	return nosql.UpdateAreaSources(mine.UID, operator, arr)
 }

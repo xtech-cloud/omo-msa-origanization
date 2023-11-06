@@ -30,11 +30,17 @@ func switchArea(info *cache.AreaInfo) *pb.AreaInfo {
 	tmp.Device = info.Device
 	tmp.Displays = info.Displays
 	tmp.Catalog = info.Catalog
+	tmp.Limit = info.LimitNum
 	tmp.Sn = info.DeviceSN()
 	tmp.Aspect = info.GetAspect()
 	tmp.Modules = make([]*pb.PairInfo, 0, len(info.Modules))
 	for _, module := range info.Modules {
 		tmp.Modules = append(tmp.Modules, &pb.PairInfo{Key: module.Key, Value: module.Value})
+	}
+
+	tmp.Sources = make([]*pb.PairInfo, 0, len(info.Sources))
+	for _, item := range info.Sources {
+		tmp.Sources = append(tmp.Sources, &pb.PairInfo{Key: item.Key, Value: item.Value})
 	}
 	return tmp
 }
@@ -209,15 +215,26 @@ func (mine *AreaService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateFil
 	} else if in.Key == "type" {
 		tp := parseInt(in.Value)
 		err = info.UpdateType(uint32(tp), in.Operator)
+	} else if in.Key == "limit" {
+		num := parseInt(in.Value)
+		err = info.UpdateLimitCount(in.Operator, uint32(num))
 	} else if in.Key == "catalog" {
 		err = info.UpdateCatalog(in.Value, in.Operator)
 	} else if in.Key == "module" {
 		if len(in.Values) < 2 {
-			err = errors.New("the values length error when udpate module")
+			err = errors.New("the values length error when update module")
 		} else {
 			key := in.Values[0]
 			val := in.Values[1]
 			err = info.UpdateModule(key, val, in.Operator)
+		}
+	} else if in.Key == "source" {
+		if len(in.Values) < 2 {
+			err = errors.New("the values length error when update source")
+		} else {
+			key := in.Values[0]
+			val := in.Values[1]
+			err = info.UpdateCustomSource(key, val, in.Operator)
 		}
 	} else {
 		err = errors.New("the field not defined")

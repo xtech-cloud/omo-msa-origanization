@@ -31,6 +31,7 @@ func switchScene(info *cache.SceneInfo) *pb.SceneInfo {
 	tmp.Supporter = info.Supporter
 	//tmp.Bucket = info.Bucket
 	tmp.Short = info.ShortName
+	tmp.Limit = uint32(info.Limit)
 	tmp.Questions = info.Questions
 	tmp.Parents = info.Parents()
 	tmp.Members = info.AllMembers()

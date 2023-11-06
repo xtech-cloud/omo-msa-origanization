@@ -7,11 +7,11 @@ import (
 )
 
 const (
-	DeviceIdle    = 0  //未绑定
-	DeviceBind    = 1  //已经绑定但未分配
-	DeviceFill    = 2  //已经绑定也分配了场景
-	DevicePend    = 3  //已经分配但未绑定
-	DeviceDiscard = 99 //废弃
+	DeviceIdle      = 0  //未绑定
+	DeviceAwake     = 1  //已经激活但未分配
+	DeviceUsing     = 2  //已经激活也分配了场景
+	DevicePendSleep = 3  //已经分配但未激活
+	DeviceDiscard   = 99 //废弃
 )
 
 //邀请码
@@ -90,13 +90,16 @@ func (mine *DeviceInfo) UpdateAspect(data, operator string) error {
 }
 
 func (mine *DeviceInfo) updateStatus(operator string) {
+	if mine.Status == DeviceDiscard {
+		return
+	}
 	st := DeviceIdle
 	if len(mine.Scene) > 2 && len(mine.Quote) > 2 {
-		st = DeviceFill
+		st = DeviceUsing
 	} else if len(mine.Scene) > 2 && len(mine.Quote) < 2 {
-		st = DevicePend
+		st = DevicePendSleep
 	} else if len(mine.Scene) < 2 && len(mine.Quote) > 2 {
-		st = DeviceBind
+		st = DeviceAwake
 	} else {
 		return
 	}
@@ -110,6 +113,15 @@ func (mine *DeviceInfo) UpdateType(operator string, tp uint8) error {
 	err := nosql.UpdateDeviceType(mine.UID, operator, tp)
 	if err == nil {
 		mine.Type = tp
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *DeviceInfo) UpdateStatus(operator string, st uint8) error {
+	err := nosql.UpdateDeviceStatus(mine.UID, operator, st)
+	if err == nil {
+		mine.Status = st
 		mine.Operator = operator
 	}
 	return err
@@ -129,8 +141,8 @@ func (mine *DeviceInfo) Bind(quote, os, operator string, act, expired uint64) er
 }
 
 func (mine *DeviceInfo) Remove(operator string) error {
-	//return nosql.RemoveDevice(mine.UID, operator)
-	return nosql.UpdateDeviceStatus(mine.UID, operator, DeviceDiscard)
+	return nosql.RemoveDevice(mine.UID, operator)
+	//return nosql.UpdateDeviceStatus(mine.UID, operator, DeviceDiscard)
 }
 
 func (mine *cacheContext) CreateDevice(scene, name, sn, remark, operator string, tp uint8) (*DeviceInfo, error) {
