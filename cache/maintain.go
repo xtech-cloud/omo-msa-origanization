@@ -3,6 +3,7 @@ package cache
 import (
 	pb "github.com/xtech-cloud/omo-msp-organization/proto/organization"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"omo.msa.organization/proxy"
 	"omo.msa.organization/proxy/nosql"
 	"time"
 )
@@ -10,12 +11,15 @@ import (
 type MaintainInfo struct {
 	Type uint8
 	baseInfo
-	Scene     string
-	Remark    string
-	Device    string
-	Area      string
-	Date      string
-	Submitter string
+	Scene       string //场景
+	Remark      string
+	Device      string //终端UID
+	Area        string //区域
+	Date        string
+	Submitter   string
+	Contacts    string                  //客户对接人
+	Maintainers []string                //维护人员
+	Contents    []proxy.MaintainContent //内容，原因
 }
 
 func (mine *cacheContext) CreateMaintain(in *pb.ReqMaintainAdd, device string) (*MaintainInfo, error) {
@@ -32,6 +36,15 @@ func (mine *cacheContext) CreateMaintain(in *pb.ReqMaintainAdd, device string) (
 	db.Device = device
 	db.Date = in.Date
 	db.Submitter = in.Submitter
+	db.Contacts = in.Contacts
+	db.Maintainers = in.Maintainers
+	if db.Maintainers == nil {
+		db.Maintainers = make([]string, 0, 1)
+	}
+	db.Contents = make([]proxy.MaintainContent, 0, len(in.Contents))
+	for _, item := range in.Contents {
+		db.Contents = append(db.Contents, proxy.MaintainContent{Type: item.Type, Content: item.Content, Assets: item.Assets})
+	}
 	err := nosql.CreateMaintain(db)
 	if err == nil {
 		info := new(MaintainInfo)
@@ -90,4 +103,7 @@ func (mine *MaintainInfo) initInfo(db *nosql.Maintain) {
 	mine.Date = db.Date
 	mine.Area = db.Area
 	mine.Submitter = db.Submitter
+	mine.Contacts = db.Contacts
+	mine.Maintainers = db.Maintainers
+	mine.Contents = db.Contents
 }

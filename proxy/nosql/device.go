@@ -4,6 +4,7 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"omo.msa.organization/proxy"
 	"time"
 )
 
@@ -15,19 +16,21 @@ type Invite struct {
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
 
-	Creator     string `json:"creator" bson:"creator"`
-	Operator    string `json:"operator" bson:"operator"`
-	Scene       string `json:"scene" bson:"scene"` // 所属场景
-	Type        uint8  `json:"type" bson:"type"`   //类型
-	Status      uint8  `json:"status" bson:"status"`
-	Remark      string `json:"remark" bson:"remark"` //备注
-	SN          string `json:"sn" bson:"sn"`         //设备SN或者邀请码
-	OS          string `json:"os" bson:"os"`         //操作系统
-	Aspect      string `json:"aspect" bson:"aspect"`
-	ExpiryTime  uint32 `json:"expiry" bson:"expiry"`           //有效时长
-	ActiveTime  int64  `json:"activated" bson:"activated"`     //激活时间
-	Quote       string `json:"quote" bson:"quote"`             //
-	Certificate string `json:"certificate" bson:"certificate"` //激活证书
+	Creator     string         `json:"creator" bson:"creator"`
+	Operator    string         `json:"operator" bson:"operator"`
+	Scene       string         `json:"scene" bson:"scene"` // 所属场景
+	Type        uint8          `json:"type" bson:"type"`   //类型
+	Status      uint8          `json:"status" bson:"status"`
+	Remark      string         `json:"remark" bson:"remark"` //备注
+	SN          string         `json:"sn" bson:"sn"`         //设备SN或者邀请码
+	OS          string         `json:"os" bson:"os"`         //操作系统
+	Aspect      string         `json:"aspect" bson:"aspect"`
+	ExpiryTime  uint32         `json:"expiry" bson:"expiry"`           //有效时长
+	ActiveTime  int64          `json:"activated" bson:"activated"`     //激活时间
+	Quote       string         `json:"quote" bson:"quote"`             //
+	Certificate string         `json:"certificate" bson:"certificate"` //激活证书
+	Meta        string         `json:"meta" bson:"meta"`
+	Auto        proxy.AutoInfo `json:"auto" bson:"auto"`
 }
 
 func CreateDevice(info *Invite) error {
@@ -200,6 +203,18 @@ func BindDevice(uid, quote, os, operator string, act, expiry uint64) error {
 
 func UpdateDeviceStatus(uid, operator string, st uint8) error {
 	msg := bson.M{"status": st, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableDevice, uid, msg)
+	return err
+}
+
+func UpdateDeviceMeta(uid, meta, operator string) error {
+	msg := bson.M{"meta": meta, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableDevice, uid, msg)
+	return err
+}
+
+func UpdateDeviceAuto(uid, operator string, auto proxy.AutoInfo) error {
+	msg := bson.M{"auto": auto, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableDevice, uid, msg)
 	return err
 }

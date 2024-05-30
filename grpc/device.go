@@ -30,6 +30,11 @@ func switchDevice(info *cache.DeviceInfo) *pb.DeviceInfo {
 	tmp.Os = info.OS
 	tmp.Certificate = info.Certificate
 	tmp.Type = uint32(info.Type)
+	tmp.Meta = info.Meta
+	tmp.Auto = &pb.PairInfo{
+		Key:   info.Auto.Begin,
+		Value: info.Auto.Stop,
+	}
 	return tmp
 }
 
@@ -135,14 +140,16 @@ func (mine *DeviceService) GetListByFilter(ctx context.Context, in *pb.RequestFi
 		if in.Key == "status" {
 			st := parseInt(in.Value)
 			list, err = cache.Context().GetDevicesByStatus(int32(st))
+		} else if in.Key == "array" {
+			list, err = cache.Context().GetDevicesByArray(in.List)
 		} else {
 			err = errors.New("the key not defined")
 		}
 	} else {
 		if in.Key == "" {
-			list, err = cache.Context().GetDevicesByOwner(in.Scene)
-		} else if in.Key == "type" {
-
+			list, err = cache.Context().GetDevicesByScene(in.Scene)
+		} else if in.Key == "area" {
+			list, err = cache.Context().GetUsableDevicesByScene(in.Scene)
 		} else {
 			err = errors.New("the key not defined")
 		}
@@ -209,6 +216,12 @@ func (mine *DeviceService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateF
 	} else if in.Key == "status" {
 		st := parseInt(in.Value)
 		err = info.UpdateStatus(in.Operator, uint8(st))
+	} else if in.Key == "auto" {
+		if len(in.Values) == 2 {
+			err = info.UpdateAuto(in.Operator, in.Values[0], in.Values[1])
+		}
+	} else if in.Key == "meta" {
+		err = info.UpdateMeta(in.Operator, in.Value)
 	} else {
 		err = errors.New("the field not defined")
 	}

@@ -14,6 +14,17 @@ type PairInfo struct {
 	Value string `json:"value" bson:"value"`
 }
 
+type AutoInfo struct {
+	Begin string `json:"begin" bson:"begin"`
+	Stop  string `json:"stop" bson:"stop"`
+}
+
+type MaintainContent struct {
+	Type    uint32   `json:"type" bson:"type"`
+	Content string   `json:"content" bson:"content"`
+	Assets  []string `json:"assets" bson:"assets"`
+}
+
 type DomainInfo struct {
 	Type     uint8     `json:"type" bson:"type"`
 	UID      string    `json:"uid" bson:"uid"`

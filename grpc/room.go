@@ -25,7 +25,7 @@ func switchRoom(info *cache.RoomInfo) *pb.RoomInfo {
 	areas := info.Areas()
 	tmp.Areas = make([]*pb.AreaInfo, 0, len(areas))
 	for _, area := range areas {
-		a := switchArea(area)
+		a := switchArea(area, true)
 		tmp.Areas = append(tmp.Areas, a)
 	}
 	return tmp
@@ -331,7 +331,7 @@ func (mine *RoomService) AppendDevice(ctx context.Context, in *pb.ReqRoomDevice,
 	list := info.Areas()
 	out.List = make([]*pb.AreaInfo, 0, len(list))
 	for _, item := range list {
-		tmp := switchArea(item)
+		tmp := switchArea(item, true)
 		out.List = append(out.List, tmp)
 	}
 	out.Status = outLog(path, out)
@@ -363,7 +363,7 @@ func (mine *RoomService) SubtractDevice(ctx context.Context, in *pb.ReqRoomDevic
 	list := info.Areas()
 	out.List = make([]*pb.AreaInfo, 0, len(list))
 	for _, item := range list {
-		tmp := switchArea(item)
+		tmp := switchArea(item, true)
 		out.List = append(out.List, tmp)
 	}
 	out.Status = outLog(path, out)
@@ -400,7 +400,7 @@ func (mine *RoomService) GetDevices(ctx context.Context, in *pb.RequestFilter, o
 	}
 	out.List = make([]*pb.AreaInfo, 0, len(list))
 	for _, item := range list {
-		tmp := switchArea(item)
+		tmp := switchArea(item, true)
 		out.List = append(out.List, tmp)
 	}
 	out.Status = outLog(path, out)

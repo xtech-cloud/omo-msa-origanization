@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//一个area对应一个终端
 type AreaInfo struct {
 	baseInfo
 	Remark   string
@@ -30,9 +31,10 @@ type AreaInfo struct {
 	Modules  []*proxy.PairInfo //模块配置
 	Sources  []*proxy.PairInfo //定制资源配置
 	Displays []string
+	Assets   []string
 }
 
-func (mine *cacheContext) CreateArea(name, remark, owner, parent, operator string) (*AreaInfo, error) {
+func (mine *cacheContext) CreateArea(name, remark, owner, parent, operator string, assets []string) (*AreaInfo, error) {
 	db := new(nosql.Area)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetAreaNextID()
@@ -50,6 +52,10 @@ func (mine *cacheContext) CreateArea(name, remark, owner, parent, operator strin
 	db.Device = ""
 	db.Question = ""
 	db.Catalog = ""
+	db.Assets = assets
+	if db.Assets == nil {
+		db.Assets = make([]string, 0, 1)
+	}
 	db.Displays = make([]string, 0, 1)
 	db.Modules = make([]*proxy.PairInfo, 0, 1)
 	db.Sources = make([]*proxy.PairInfo, 0, 1)
@@ -100,7 +106,7 @@ func (mine *cacheContext) GetAreaBySN(sn string) (*AreaInfo, error) {
 	return mine.GetAreaByDevice(db.UID.Hex())
 }
 
-func (mine *cacheContext) GetAreas(parent string) []*AreaInfo {
+func (mine *cacheContext) GetAreasByParent(parent string) []*AreaInfo {
 	list := make([]*AreaInfo, 0, 20)
 	array, err := nosql.GetAreasByParent(parent)
 	if err != nil {
@@ -114,10 +120,10 @@ func (mine *cacheContext) GetAreas(parent string) []*AreaInfo {
 	return list
 }
 
-func (mine *cacheContext) GetAreasByOwner(uid string) []*AreaInfo {
+func (mine *cacheContext) GetAreasByScene(uid string) ([]*AreaInfo, error) {
 	array, err := nosql.GetAreasByOwner(uid)
 	if err != nil {
-		return make([]*AreaInfo, 0, 0)
+		return make([]*AreaInfo, 0, 0), err
 	}
 	list := make([]*AreaInfo, 0, len(array))
 	for _, item := range array {
@@ -125,7 +131,7 @@ func (mine *cacheContext) GetAreasByOwner(uid string) []*AreaInfo {
 		info.initInfo(item)
 		list = append(list, info)
 	}
-	return list
+	return list, nil
 }
 
 func (mine *cacheContext) GetAreasByTemplate(owner, template string) []*AreaInfo {
@@ -180,6 +186,7 @@ func (mine *AreaInfo) initInfo(db *nosql.Area) {
 	mine.Displays = db.Displays
 	mine.Modules = db.Modules
 	mine.Sources = db.Sources
+	mine.Assets = db.Assets
 }
 
 func (mine *AreaInfo) DeviceInfo() (*DeviceInfo, error) {
@@ -253,6 +260,15 @@ func (mine *AreaInfo) UpdateDisplays(operator string, list []string) error {
 	err := nosql.UpdateAreaDisplays(mine.UID, operator, list)
 	if err == nil {
 		mine.Displays = list
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *AreaInfo) UpdateAssets(operator string, list []string) error {
+	err := nosql.UpdateAreaAssets(mine.UID, operator, list)
+	if err == nil {
+		mine.Assets = list
 		mine.Operator = operator
 	}
 	return err

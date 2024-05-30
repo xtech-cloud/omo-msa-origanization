@@ -2,6 +2,7 @@ package cache
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"omo.msa.organization/proxy"
 	"omo.msa.organization/proxy/nosql"
 	"time"
 )
@@ -14,20 +15,23 @@ const (
 	DeviceDiscard   = 99 //废弃
 )
 
-//邀请码
+//终端邀请码
 type DeviceInfo struct {
 	Status uint8
 	Type   uint8
 	baseInfo
-	Remark      string
+	Remark      string //信息
 	Scene       string
 	OS          string
 	Quote       string
-	SN          string //邀请码
-	Aspect      string
-	ActiveTime  int64  //激活时间
-	Expired     uint32 //有效时间
-	Certificate string //证书
+	SN          string         //邀请码
+	Aspect      string         //外观
+	ActiveTime  int64          //激活时间
+	Expired     uint32         //有效时间
+	Certificate string         //证书
+	Meta        string         //终端配置
+	Auto        proxy.AutoInfo //自动开关机
+	Assets      []string       //照片
 }
 
 func (mine *DeviceInfo) initInfo(db *nosql.Invite) {
@@ -48,6 +52,9 @@ func (mine *DeviceInfo) initInfo(db *nosql.Invite) {
 	mine.ActiveTime = db.ActiveTime
 	mine.Expired = db.ExpiryTime
 	mine.Certificate = db.Certificate
+	mine.Meta = db.Meta
+	mine.Auto = db.Auto
+
 }
 
 func (mine *DeviceInfo) UpdateBase(name, remark, operator string) error {
@@ -127,6 +134,25 @@ func (mine *DeviceInfo) UpdateStatus(operator string, st uint8) error {
 	return err
 }
 
+func (mine *DeviceInfo) UpdateAuto(operator, begin, end string) error {
+	auto := proxy.AutoInfo{Begin: begin, Stop: end}
+	err := nosql.UpdateDeviceAuto(mine.UID, operator, auto)
+	if err == nil {
+		mine.Auto = auto
+		mine.Operator = operator
+	}
+	return err
+}
+
+func (mine *DeviceInfo) UpdateMeta(operator, meta string) error {
+	err := nosql.UpdateDeviceMeta(mine.UID, meta, operator)
+	if err == nil {
+		mine.Meta = meta
+		mine.Operator = operator
+	}
+	return err
+}
+
 func (mine *DeviceInfo) Bind(quote, os, operator string, act, expired uint64) error {
 	err := nosql.BindDevice(mine.UID, quote, os, operator, act, expired)
 	if err == nil {
@@ -164,6 +190,13 @@ func (mine *cacheContext) CreateDevice(scene, name, sn, remark, operator string,
 	db.Certificate = ""
 	db.Type = tp
 	db.Status = DeviceIdle
+	db.Meta = ""
+	db.Aspect = ""
+	db.Auto = proxy.AutoInfo{
+		Begin: "",
+		Stop:  "",
+	}
+
 	err := nosql.CreateDevice(db)
 	if err == nil {
 		tmp := new(DeviceInfo)
@@ -197,7 +230,7 @@ func (mine *cacheContext) GetDeviceBySN(sn string) (*DeviceInfo, error) {
 	return tmp, nil
 }
 
-func (mine *cacheContext) GetDevicesByOwner(owner string) ([]*DeviceInfo, error) {
+func (mine *cacheContext) GetDevicesByScene(owner string) ([]*DeviceInfo, error) {
 	dbs, err := nosql.GetDevicesByScene(owner)
 	if err != nil {
 		return nil, err
@@ -207,6 +240,22 @@ func (mine *cacheContext) GetDevicesByOwner(owner string) ([]*DeviceInfo, error)
 		tmp := new(DeviceInfo)
 		tmp.initInfo(db)
 		list = append(list, tmp)
+	}
+
+	return list, nil
+}
+
+func (mine *cacheContext) GetUsableDevicesByScene(scene string) ([]*DeviceInfo, error) {
+	arr, err := mine.GetAreasByScene(scene)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*DeviceInfo, 0, len(arr))
+	for _, db := range arr {
+		data, _ := db.DeviceInfo()
+		if data != nil {
+			list = append(list, data)
+		}
 	}
 
 	return list, nil
@@ -229,6 +278,20 @@ func (mine *cacheContext) GetDevicesByStatus(st int32) ([]*DeviceInfo, error) {
 		tmp := new(DeviceInfo)
 		tmp.initInfo(db)
 		list = append(list, tmp)
+	}
+
+	return list, nil
+}
+
+func (mine *cacheContext) GetDevicesByArray(arr []string) ([]*DeviceInfo, error) {
+	list := make([]*DeviceInfo, 0, len(arr))
+	for _, uid := range arr {
+		db, _ := nosql.GetDevice(uid)
+		if db != nil {
+			tmp := new(DeviceInfo)
+			tmp.initInfo(db)
+			list = append(list, tmp)
+		}
 	}
 
 	return list, nil

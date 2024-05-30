@@ -24,6 +24,13 @@ func switchMaintain(info *cache.MaintainInfo) *pb.MaintainInfo {
 	tmp.Date = info.Date
 	tmp.Area = info.Area
 	tmp.Submitter = info.Submitter
+	tmp.Contacts = info.Contacts
+	tmp.Maintainers = info.Maintainers
+	tmp.Contents = make([]*pb.MaintainContent, 0, len(info.Contents))
+	for _, item := range info.Contents {
+		tmp.Contents = append(tmp.Contents, &pb.MaintainContent{Type: item.Type, Content: item.Content, Assets: item.Assets})
+	}
+
 	return tmp
 }
 

@@ -30,6 +30,7 @@ type Area struct {
 	Question string            `json:"question" bson:"question"`
 	Catalog  string            `json:"catalog" bson:"catalog"`
 	Displays []string          `json:"displays" bson:"displays"` // 正在设备展览的列表
+	Assets   []string          `json:"assets" bson:"assets"`
 	Modules  []*proxy.PairInfo `json:"modules" bson:"modules"`
 	Sources  []*proxy.PairInfo `json:"sources" bson:"sources"`
 }
@@ -170,6 +171,12 @@ func GetAllAreas() ([]*Area, error) {
 
 func UpdateAreaBase(uid, name, remark, operator string) error {
 	msg := bson.M{"name": name, "remark": remark, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableArea, uid, msg)
+	return err
+}
+
+func UpdateAreaAssets(uid, operator string, assets []string) error {
+	msg := bson.M{"assets": assets, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableArea, uid, msg)
 	return err
 }

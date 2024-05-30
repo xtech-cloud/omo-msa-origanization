@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"omo.msa.organization/proxy"
 	"time"
 )
 
@@ -18,13 +19,16 @@ type Maintain struct {
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Type      uint8  `json:"type" bson:"type"`
-	Remark    string `json:"remark" bson:"remark"`
-	Scene     string `json:"scene" bson:"scene"`
-	Area      string `json:"area" bson:"area"`
-	Date      string `json:"date" bson:"date"`
-	Device    string `json:"device" bson:"device"`
-	Submitter string `json:"submitter" bson:"submitter"`
+	Type        uint8                   `json:"type" bson:"type"`
+	Remark      string                  `json:"remark" bson:"remark"`
+	Scene       string                  `json:"scene" bson:"scene"`
+	Area        string                  `json:"area" bson:"area"`
+	Date        string                  `json:"date" bson:"date"`
+	Device      string                  `json:"device" bson:"device"`
+	Submitter   string                  `json:"submitter" bson:"submitter"`
+	Contacts    string                  `json:"contacts" bson:"contacts"`       //客户对接人
+	Maintainers []string                `json:"maintainers" json:"maintainers"` //维护人员
+	Contents    []proxy.MaintainContent `json:"contents" bson:"contents"`       //内容，原因
 }
 
 func CreateMaintain(info *Maintain) error {

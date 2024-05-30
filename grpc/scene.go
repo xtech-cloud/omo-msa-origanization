@@ -140,7 +140,7 @@ func (mine *SceneService) GetList(ctx context.Context, in *pb.RequestPage, out *
 	var total uint32 = 0
 	var max uint32 = 0
 	var list []*cache.SceneInfo
-	if in.Parent == "" {
+	if len(in.Parent) < 1 {
 		total, max, list = cache.Context().GetScenes(in.Page, in.Number)
 	} else {
 		total, max, list = cache.Context().GetScenesByParent(in.Parent, in.Page, in.Number)

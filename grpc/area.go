@@ -12,7 +12,7 @@ import (
 
 type AreaService struct{}
 
-func switchArea(info *cache.AreaInfo) *pb.AreaInfo {
+func switchArea(info *cache.AreaInfo, dev bool) *pb.AreaInfo {
 	tmp := new(pb.AreaInfo)
 	tmp.Uid = info.UID
 	tmp.Id = info.ID
@@ -33,6 +33,7 @@ func switchArea(info *cache.AreaInfo) *pb.AreaInfo {
 	tmp.Limit = info.LimitNum
 	tmp.Sn = info.DeviceSN()
 	tmp.Aspect = info.GetAspect()
+	tmp.Assets = info.Assets
 	tmp.Modules = make([]*pb.PairInfo, 0, len(info.Modules))
 	for _, module := range info.Modules {
 		tmp.Modules = append(tmp.Modules, &pb.PairInfo{Key: module.Key, Value: module.Value})
@@ -41,6 +42,12 @@ func switchArea(info *cache.AreaInfo) *pb.AreaInfo {
 	tmp.Sources = make([]*pb.PairInfo, 0, len(info.Sources))
 	for _, item := range info.Sources {
 		tmp.Sources = append(tmp.Sources, &pb.PairInfo{Key: item.Key, Value: item.Value})
+	}
+	if dev {
+		data, _ := info.DeviceInfo()
+		if data != nil {
+			tmp.Terminal = switchDevice(data)
+		}
 	}
 	return tmp
 }
@@ -53,12 +60,12 @@ func (mine *AreaService) AddOne(ctx context.Context, in *pb.ReqAreaAdd, out *pb.
 		return nil
 	}
 
-	info, err := cache.Context().CreateArea(in.Name, in.Remark, in.Owner, in.Parent, in.Operator)
+	info, err := cache.Context().CreateArea(in.Name, in.Remark, in.Owner, in.Parent, in.Operator, in.Assets)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
-	out.Info = switchArea(info)
+	out.Info = switchArea(info, false)
 	out.Status = outLog(path, out)
 	return nil
 }
@@ -75,7 +82,7 @@ func (mine *AreaService) GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 		out.Status = outError(path, "the area not found ", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	out.Info = switchArea(info)
+	out.Info = switchArea(info, in.Flag > 0)
 	out.Status = outLog(path, out)
 	return nil
 }
@@ -128,7 +135,7 @@ func (mine *AreaService) GetListByFilter(ctx context.Context, in *pb.RequestFilt
 	var list []*cache.AreaInfo
 	var err error
 	if in.Key == "" {
-		list = cache.Context().GetAreasByOwner(in.Scene)
+		list, _ = cache.Context().GetAreasByScene(in.Scene)
 	} else if in.Key == "template" {
 		list = cache.Context().GetAreasByTemplate(in.Scene, in.Value)
 	} else if in.Key == "array" {
@@ -154,7 +161,7 @@ func (mine *AreaService) GetListByFilter(ctx context.Context, in *pb.RequestFilt
 	}
 	out.List = make([]*pb.AreaInfo, 0, len(list))
 	for _, value := range list {
-		out.List = append(out.List, switchArea(value))
+		out.List = append(out.List, switchArea(value, in.Flag > 0))
 	}
 
 	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
@@ -220,6 +227,8 @@ func (mine *AreaService) UpdateByFilter(ctx context.Context, in *pb.ReqUpdateFil
 		err = info.UpdateLimitCount(in.Operator, uint32(num))
 	} else if in.Key == "catalog" {
 		err = info.UpdateCatalog(in.Value, in.Operator)
+	} else if in.Key == "assets" {
+		err = info.UpdateAssets(in.Operator, in.Values)
 	} else if in.Key == "module" {
 		if len(in.Values) < 2 {
 			err = errors.New("the values length error when update module")
